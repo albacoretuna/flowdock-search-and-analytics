@@ -1,4 +1,4 @@
-// From https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
+// This app really helped with understanding flowdock api: https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
 const { makeRequest } = require('./http.js');
 
 function downloadMoreMessages(sinceId, flowName) {
@@ -31,8 +31,8 @@ function keepOnlyMessageEvents(messages) {
   });
 }
 
-function downloadFlowDockMessages(flowName, latestDownloadedMessageId=0) {
-  var messages = [];
+// give it a flowname and it downloads everything
+function downloadFlowDockMessages(flowName, latestDownloadedMessageId=0, messages=[]) {
   // download the first set
   return downloadMoreMessages(latestDownloadedMessageId, flowName)
     .then(({data}) => {
@@ -42,10 +42,10 @@ function downloadFlowDockMessages(flowName, latestDownloadedMessageId=0) {
         messages = messages.concat(data);
         // download the next batch, starting from the latest downloaded message id
         latestDownloadedMessageId = data[data.length - 1].id
-        downloadFlowDockMessages(flowName, latestDownloadedMessageId)
+        return downloadFlowDockMessages(flowName, latestDownloadedMessageId, messages)
       }
       else {
-        console.log('no more messages to download');
+        // console.log('no more messages to download');
         return messages;
       }
       // console.log(messages);
@@ -53,7 +53,8 @@ function downloadFlowDockMessages(flowName, latestDownloadedMessageId=0) {
     .catch(error => console.log(error))
 
 }
-// Return the number of messages in the flow
+
+// Return the number of messages in the flow, which seems to be just the latest message id
 function getMessagesCount(flowName) {
   return makeRequest({
     url: `${flowName}/messages?limit=1`,
