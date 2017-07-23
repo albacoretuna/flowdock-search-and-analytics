@@ -4,17 +4,30 @@
   "description": "Import flowdock messages into elastic search for search and analytics porpuses. ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "precommit": "lint-staged",
+    "format": "prettier-standard 'app/**/*.js'"
   },
   "author": "Omid",
   "license": "MIT",
+  "lint-staged": {
+    "linters": {
+      "src/**/*.js": [
+        "prettier-standard",
+        "git add"
+      ]
+    }
+  },
   "dependencies": {
     "axios": "0.16.2",
     "btoa": "1.1.2",
     "dotenv": "4.0.0",
+    "husky": "0.14.3",
     "jsonfile": "3.0.1",
     "leveldown": "1.7.2",
     "levelup": "1.3.8",
-    "ora": "1.3.0"
+    "lint-staged": "4.0.2",
+    "ora": "1.3.0",
+    "prettier-standard": "6.0.0"
   }
 }
