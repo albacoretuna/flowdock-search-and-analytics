@@ -1,17 +1,16 @@
 {
   "name": "flowdock-analytics",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Import flowdock messages into elastic search for search and analytics porpuses. ",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Omid Hezave <o@js.ax> (http://omid.fi)",
+  "author": "Omid",
   "license": "MIT",
   "dependencies": {
     "axios": "0.16.2",
     "btoa": "1.1.2",
-    "dotenv": "4.0.0",
-    "eventsource": "1.0.5"
+    "dotenv": "4.0.0"
   }
 }
