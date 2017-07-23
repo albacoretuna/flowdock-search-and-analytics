@@ -42,16 +42,17 @@ function downloadFlowDockMessages(flowName, latestDownloadedMessageId=0, message
         data = removeUnneededMessageProps(data);
         data = keepOnlyMessageEvents(data);
         messages = messages.concat(data);
-        spinner.text = `Downloaded ${messages.length} messages so far`;
+        spinner.text = `Downloaded ${messages.length} Messages so far`;
         // download the next batch, starting from the latest downloaded message id
         latestDownloadedMessageId = data[data.length - 1].id
         return downloadFlowDockMessages(flowName, latestDownloadedMessageId, messages)
       }
       else {
         // console.log('no more messages to download');
+        spinner.succeed('Download completed');
+
         return messages;
       }
-      // console.log(messages);
     })
     .catch(error => console.log(error))
 

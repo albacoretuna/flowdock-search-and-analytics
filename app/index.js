@@ -3,12 +3,12 @@ const FLOWDOCK_TOKEN=process.env.FLOWDOCK_PERSONAL_API_TOKEN || '';
 const { getMessagesCount, downloadFlowDockMessages } = require('./messages.js');
 const { persistMessages } = require('./store.js');
 
-getMessagesCount('futurice')
-  .then(({data}) => { console.log(data[0].id, 'messages to download')})
+getMessagesCount('vegeterian-options')
+  .then(({data}) => { console.log('Probably ', data[0].id, ' Messages to download')})
   .catch((data) => { console.warn(data)})
 
-downloadFlowDockMessages('futurice')
+downloadFlowDockMessages('vegeterian-options')
   .then(data => {
-    persistMessages(data, 'futurice')
+    persistMessages(data, 'vegeterian-options')
     })
   .catch((data) => { console.warn(data)})
