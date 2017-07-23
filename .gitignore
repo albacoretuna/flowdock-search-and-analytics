@@ -3,3 +3,4 @@ node_modules
 temp
 app/messagesDatabase.db/
 app/messagesDatabase.db/*
+exports
