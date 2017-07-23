@@ -1,5 +1,7 @@
 // This app really helped with understanding flowdock api: https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
+const ora = require('ora');
 const { makeRequest } = require('./http.js');
+const spinner = ora('').start();
 
 function downloadMoreMessages(sinceId, flowName) {
   return makeRequest({
@@ -14,7 +16,7 @@ function removeUnneededMessageProps(messages) {
     event: message.event,
     user: message.user,
     content: message.content,
-    sent: new Date(message.sent)
+    sent: message.sent
   }))
 }
 
@@ -40,6 +42,7 @@ function downloadFlowDockMessages(flowName, latestDownloadedMessageId=0, message
         data = removeUnneededMessageProps(data);
         data = keepOnlyMessageEvents(data);
         messages = messages.concat(data);
+        spinner.text = `Downloaded ${messages.length} messages so far`;
         // download the next batch, starting from the latest downloaded message id
         latestDownloadedMessageId = data[data.length - 1].id
         return downloadFlowDockMessages(flowName, latestDownloadedMessageId, messages)
