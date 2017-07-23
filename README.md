@@ -13,6 +13,8 @@ npm install
 ```
 Copy app/env-sample to app/.env and add your flowdock api token to it
 
+# Run
 ```
+cd app
 node app/index.js
 ```
