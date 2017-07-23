@@ -1,0 +1,67 @@
+// From https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
+const { makeRequest } = require('./http.js');
+
+function downloadMoreMessages(sinceId, flowName) {
+  return makeRequest({
+    url: `${flowName}/messages?&since_id=${sinceId}&sort=asc&limit=100`,
+    method: 'get'
+  });
+}
+
+function removeUnneededMessageProps(messages) {
+  return messages.map(message => ({
+    id: message.id,
+    event: message.event,
+    user: message.user,
+    content: message.content,
+    sent: new Date(message.sent)
+  }))
+}
+
+// remove the unneeded event types, like user nick name changes etc
+function keepOnlyMessageEvents(messages) {
+  return messages.map(message => {
+    if(message.event === 'message' || message.event === 'comment') {
+      return message;
+    } else {
+      return {
+        id: message.id
+      }
+    }
+  });
+}
+
+function downloadFlowDockMessages(flowName, latestDownloadedMessageId=0) {
+  var messages = [];
+  // download the first set
+  return downloadMoreMessages(latestDownloadedMessageId, flowName)
+    .then(({data}) => {
+      if(data.length > 0) {
+        data = removeUnneededMessageProps(data);
+        data = keepOnlyMessageEvents(data);
+        messages = messages.concat(data);
+        // download the next batch, starting from the latest downloaded message id
+        latestDownloadedMessageId = data[data.length - 1].id
+        downloadFlowDockMessages(flowName, latestDownloadedMessageId)
+      }
+      else {
+        console.log('no more messages to download');
+        return messages;
+      }
+      // console.log(messages);
+    })
+    .catch(error => console.log(error))
+
+}
+// Return the number of messages in the flow
+function getMessagesCount(flowName) {
+  return makeRequest({
+    url: `${flowName}/messages?limit=1`,
+    method: 'get'
+  })
+}
+
+module.exports = {
+  getMessagesCount,
+  downloadFlowDockMessages
+}
