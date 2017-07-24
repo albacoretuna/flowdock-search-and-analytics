@@ -2,7 +2,7 @@
 const ora = require('ora')
 const { makeRequest } = require('./http.js')
 const spinner = ora('').start()
-
+const { saveToElasticsearch } = require('./elasticsearch.js')
 function downloadMoreMessages (sinceId, flowName) {
   return makeRequest({
     url: `${flowName}/messages?&since_id=${sinceId}&sort=asc&limit=100`,
@@ -46,6 +46,10 @@ function downloadFlowDockMessages (
       if (data.length > 0) {
         data = decorateMessageProps(data, flowName)
         data = keepOnlyMessageEvents(data)
+        data.forEach(message => {
+          console.log('message is... ', message)
+          saveToElasticsearch(flowName, message)
+        })
         messages = messages.concat(data)
         spinner.text = `Downloaded ${messages.length} Messages so far`
         // download the next batch, starting from the latest downloaded message id
