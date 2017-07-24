@@ -3,4 +3,7 @@ node_modules
 temp
 app/messagesDatabase.db/
 app/messagesDatabase.db/*
-exports
+# exclude everything
+exports/*
+# exception to the rule
+!exports/.gitkeep 

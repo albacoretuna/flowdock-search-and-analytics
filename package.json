@@ -12,7 +12,7 @@
   "license": "MIT",
   "lint-staged": {
     "linters": {
-      "src/**/*.js": [
+      "app/**/*.js": [
         "prettier-standard",
         "git add"
       ]
