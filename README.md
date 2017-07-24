@@ -22,4 +22,5 @@ node app/index.js
 ## Running elastic search
 ```
 cd elk
+docker-compose up
 ```
