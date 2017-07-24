@@ -2,23 +2,11 @@
 const levelup = require('levelup')
 const jsonfile = require('jsonfile')
 
-// ours
-
 // our databse
 const messagesDatabase = levelup('./messagesDatabase.db')
 
-// gets an array of messages, and makes an object with their ids as keys
-function setMessagesObject (messages) {
-  let storage = {}
-  messages.forEach(el => {
-    storage[el.id] = el
-  })
-  return storage
-}
-
 function persistMessages (messages, flowName = 'vegeterian-options') {
-  let storage = setMessagesObject(messages)
-  messagesDatabase.put(flowName, JSON.stringify(storage), err => {
+  messagesDatabase.put(flowName, JSON.stringify(messages), err => {
     if (err) return console.log('Ooops! leveldb panic!', err)
     // console.log('saved in db');
     getMessages(flowName)
