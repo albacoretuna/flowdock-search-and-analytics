@@ -18,3 +18,8 @@ Copy app/env-sample to app/.env and add your flowdock api token to it
 cd app
 node app/index.js
 ```
+
+## Running elastic search
+```
+cd elk
+```

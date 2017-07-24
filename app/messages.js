@@ -10,13 +10,14 @@ function downloadMoreMessages (sinceId, flowName) {
   })
 }
 
-function removeUnneededMessageProps (messages) {
+function decorateMessageProps (messages, flowName) {
   return messages.map(message => ({
     id: message.id,
     event: message.event,
     user: message.user,
     content: message.content,
-    sent: message.sent
+    sent: message.sent,
+    flow: flowName
   }))
 }
 
@@ -43,7 +44,7 @@ function downloadFlowDockMessages (
   return downloadMoreMessages(latestDownloadedMessageId, flowName)
     .then(({ data }) => {
       if (data.length > 0) {
-        data = removeUnneededMessageProps(data)
+        data = decorateMessageProps(data, flowName)
         data = keepOnlyMessageEvents(data)
         messages = messages.concat(data)
         spinner.text = `Downloaded ${messages.length} Messages so far`
