@@ -16,7 +16,7 @@ Copy app/env-sample to app/.env and add your flowdock api token to it
 # Run
 ```
 # start elasticsearch
-cd elk
+cd docker-elk
 docker-compose up
 
 # start the app
