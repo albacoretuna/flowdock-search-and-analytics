@@ -6,4 +6,5 @@ app/messagesDatabase.db/*
 # exclude everything
 exports/*
 # exception to the rule
-!exports/.gitkeep 
+!exports/.gitkeep
+docker-elk/elasticsearch/data/*

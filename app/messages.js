@@ -1,5 +1,6 @@
 // This app really helped with understanding flowdock api: https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
 const ora = require('ora')
+const moment = require('moment')
 const { makeRequest } = require('./http.js')
 const spinner = ora('').start()
 const { saveToElasticsearch } = require('./elasticsearch.js')
@@ -10,14 +11,37 @@ function downloadMoreMessages (sinceId, flowName) {
   })
 }
 
+function getMessageContent (message) {
+  if (!message.content) {
+    return
+  }
+
+  if (
+    typeof message.content === 'object' &&
+    typeof message.content.text === 'string'
+  ) {
+    return message.content.text
+  }
+
+  return message.content
+}
+function getThreadURL (message, flowName) {
+  if (message.thread_id) {
+    return `/${flowName}/threads/${message.thread_id}`
+  }
+}
 function decorateMessageProps (messages, flowName) {
   return messages.map(message => ({
     id: message.id,
+    uuid: message.uuid,
+    flowId: message.id,
     event: message.event,
     user: message.user,
-    content: message.content,
-    sent: message.sent,
-    flow: flowName
+    content: getMessageContent(message),
+    threadURL: getThreadURL(message, flowName),
+    flowName: flowName,
+    sentEpoch: message.sent,
+    sentTimeReadable: moment(message.sent).format('HH:mm - DD-MM-YYYY')
   }))
 }
 
@@ -34,11 +58,29 @@ function keepOnlyMessageEvents (messages) {
   })
 }
 
+// matches messages with nick names if possible
+function addUserInfoToMessages (users, messages) {
+  let messagesWithUserInfo = messages.map(message => {
+    let user = users.filter(user => {
+      user.id === message.user
+      if (user) {
+        message.userNick = user
+        message.userNick = user.nick
+        message.userFullName = user.name
+        return message
+      }
+      return message
+    })
+    return messagesWithUserInfo
+  })
+}
+
 // give it a flowname and it downloads everything
 function downloadFlowDockMessages (
   flowName,
   latestDownloadedMessageId = 0,
-  messages = []
+  messages = [],
+  users
 ) {
   // download the first set
   return downloadMoreMessages(latestDownloadedMessageId, flowName)
@@ -46,9 +88,12 @@ function downloadFlowDockMessages (
       if (data.length > 0) {
         data = decorateMessageProps(data, flowName)
         data = keepOnlyMessageEvents(data)
+        data = addUserInfo(data)
         data.forEach(message => {
           console.log('message is... ', message)
-          saveToElasticsearch(flowName, message)
+          if (message.content) {
+            saveToElasticsearch(message)
+          }
         })
         messages = messages.concat(data)
         spinner.text = `Downloaded ${messages.length} Messages so far`
