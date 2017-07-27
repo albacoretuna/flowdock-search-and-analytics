@@ -1,7 +1,7 @@
 const elasticsearch = require('elasticsearch')
 const client = new elasticsearch.Client({
-  host: 'localhost:9200',
-  log: 'trace'
+  host: 'localhost:9200'
+  // log: 'trace' // enable for debugging
 })
 createElasticsearchIndex()
 async function createElasticsearchIndex () {
@@ -58,6 +58,24 @@ async function createElasticsearchIndex () {
                   }
                 }
               },
+              nick: {
+                type: 'text',
+                fields: {
+                  keyword: {
+                    type: 'keyword',
+                    ignore_above: 256
+                  }
+                }
+              },
+              name: {
+                type: 'text',
+                fields: {
+                  keyword: {
+                    type: 'keyword',
+                    ignore_above: 256
+                  }
+                }
+              },
               flowName: {
                 type: 'text',
                 fields: {
@@ -95,14 +113,14 @@ function saveToElasticsearch (message) {
         sentTimeReadable: message.sentTimeReadable,
         sentEpoch: message.sentEpoch,
         user: message.user,
+        userNick: message.nick,
+        name: message.name,
         flowName: message.flowName,
         threadURL: message.threadURL
       }
     },
     function (error, response) {
       if (error) console.log('elastic search panic! ', error)
-
-      console.log('saved to elastic')
     }
   )
 }

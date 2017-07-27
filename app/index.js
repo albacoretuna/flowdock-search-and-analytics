@@ -9,7 +9,8 @@ const flowName = 'futurice'
 async function init () {
   await createElasticsearchIndex()
   let users = await getUsers()
-  getMessagesCount(flowName, users)
+  users = users.data
+  getMessagesCount(flowName)
     .then(({ data }) => {
       console.log('Probably ', data[0].id, 'Messages to download')
     })
@@ -17,13 +18,14 @@ async function init () {
       console.warn(data)
     })
 
-  downloadFlowDockMessages(flowName)
+  downloadFlowDockMessages(flowName, 0, [], users)
     .then(data => {
-      persistMessages(data, flowName)
+      console.log('downloaded all messages in the flow: ', flowName)
+      // persistMessages(data, flowName)
     })
     .catch(data => {
       console.warn(data)
     })
 }
 
-// init()
+init()

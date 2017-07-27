@@ -4,6 +4,7 @@ const moment = require('moment')
 const { makeRequest } = require('./http.js')
 const spinner = ora('').start()
 const { saveToElasticsearch } = require('./elasticsearch.js')
+const _ = require('underscore')
 function downloadMoreMessages (sinceId, flowName) {
   return makeRequest({
     url: `${flowName}/messages?&since_id=${sinceId}&sort=asc&limit=100`,
@@ -12,7 +13,7 @@ function downloadMoreMessages (sinceId, flowName) {
 }
 
 function getMessageContent (message) {
-  if (!message.content) {
+  if (!message || !message.content) {
     return
   }
 
@@ -37,6 +38,8 @@ function decorateMessageProps (messages, flowName) {
     flowId: message.id,
     event: message.event,
     user: message.user,
+    nick: message.nick,
+    name: message.name,
     content: getMessageContent(message),
     threadURL: getThreadURL(message, flowName),
     flowName: flowName,
@@ -47,31 +50,19 @@ function decorateMessageProps (messages, flowName) {
 
 // remove the unneeded event types, like user nick name changes etc
 function keepOnlyMessageEvents (messages) {
-  return messages.map(message => {
-    if (message.event === 'message' || message.event === 'comment') {
-      return message
-    } else {
-      return {
-        id: message.id
-      }
-    }
-  })
+  return messages.filter(
+    message => message.event === 'message' || message.event === 'comment'
+  )
 }
 
 // matches messages with nick names if possible
-function addUserInfoToMessages (users, messages) {
-  let messagesWithUserInfo = messages.map(message => {
-    let user = users.filter(user => {
-      user.id === message.user
-      if (user) {
-        message.userNick = user
-        message.userNick = user.nick
-        message.userFullName = user.name
-        return message
-      }
-      return message
-    })
-    return messagesWithUserInfo
+function addUserInfoToMessages (users = [], messages = []) {
+  return _.map(messages, function (message) {
+    return Object.assign(
+      {},
+      message,
+      _.findWhere(users, { id: parseInt(message.user, 10) })
+    )
   })
 }
 
@@ -86,23 +77,30 @@ function downloadFlowDockMessages (
   return downloadMoreMessages(latestDownloadedMessageId, flowName)
     .then(({ data }) => {
       if (data.length > 0) {
-        data = decorateMessageProps(data, flowName)
-        data = keepOnlyMessageEvents(data)
-        data = addUserInfo(data)
-        data.forEach(message => {
-          console.log('message is... ', message)
-          if (message.content) {
+        latestDownloadedMessageId =
+          data[data.length - 1] && data[data.length - 1].id
+        let messagesWithContent = keepOnlyMessageEvents(data)
+        let messagesWithUserInfo = addUserInfoToMessages(
+          users,
+          messagesWithContent
+        )
+        let decoratedMessages = decorateMessageProps(
+          messagesWithUserInfo,
+          flowName
+        )
+        decoratedMessages.forEach(message => {
+          if (message && message.content) {
             saveToElasticsearch(message)
           }
         })
-        messages = messages.concat(data)
+        messages = messages.concat(decoratedMessages)
         spinner.text = `Downloaded ${messages.length} Messages so far`
         // download the next batch, starting from the latest downloaded message id
-        latestDownloadedMessageId = data[data.length - 1].id
         return downloadFlowDockMessages(
           flowName,
           latestDownloadedMessageId,
-          messages
+          messages,
+          users
         )
       } else {
         // console.log('no more messages to download');
