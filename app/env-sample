@@ -12,4 +12,6 @@ FLOWDOCK_PERSONAL_API_TOKEN=c656ccab5x30353a7ec32s4s2b91c146
 # var flows= // [make that api call and save the results into the flows]
 # copy(flows.map((flow)=> (`${flow.organization.parameterized_name}/${flow.parameterized_name}`)).join(', '))
 FLOWS_TO_DOWNLOAD='flowdock-organization-name/flow-name,another-organization/another-flow-name'
+# this is like the database name in elasticsearch land, choose it freely!
+INDEX_NAME='flowdock-messages'
 
