@@ -1,10 +1,14 @@
-// This app really helped with understanding flowdock api: https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
+/*
+ * CREDITS:
+ * This app really helped with understanding flowdock api: https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
+ **/
 const ora = require('ora')
 const moment = require('moment')
 const { makeRequest } = require('./http.js')
 const { saveToElasticsearch } = require('./elasticsearch.js')
 const _ = require('underscore')
 const spinner = ora('')
+
 // returns an array of messages
 function downloadMoreMessages (sinceId, flowName) {
   return makeRequest({
@@ -88,41 +92,43 @@ async function downloadFlowDockMessages (
   downloadMoreMessages(latestDownloadedMessageId, flowName)
     .then(({ data }) => {
       spinner.start()
-      if (data.length > 0) {
-        latestDownloadedMessageId =
-          data[data.length - 1] && data[data.length - 1].id
-        let messagesWithContent = keepOnlyMessageEvents(data)
-        let messagesWithUserInfo = addUserInfoToMessages(
-          users,
-          messagesWithContent
-        )
-        let decoratedMessages = decorateMessageProps(
-          messagesWithUserInfo,
-          flowName
-        )
 
-        // feed the current batch of messages to Elasticsearch
-        saveToElasticsearch(decoratedMessages)
-
-        messages = messages.concat(decoratedMessages)
-
-        spinner.text = `Downloaded ${messages.length} messages of ${parseInt(
-          messageCount,
-          10
-        ).toLocaleString()} in ${flowName}`
-        // download the next batch, starting from the latest downloaded message id
-        return downloadFlowDockMessages(
-          flowName,
-          latestDownloadedMessageId,
-          messages,
-          users,
-          messageCount
-        )
-      } else {
+      // no more messages to download
+      if (data.length < 1) {
         // console.log('no more messages to download');
         spinner.succeed(`Download completed for ${flowName}`)
         return messages
       }
+      latestDownloadedMessageId =
+        data[data.length - 1] && data[data.length - 1].id
+      let messagesWithContent = keepOnlyMessageEvents(data)
+      let messagesWithUserInfo = addUserInfoToMessages(
+        users,
+        messagesWithContent
+      )
+
+      let decoratedMessages = decorateMessageProps(
+        messagesWithUserInfo,
+        flowName
+      )
+
+      // feed the current batch of messages to Elasticsearch
+      saveToElasticsearch(decoratedMessages)
+
+      messages = messages.concat(decoratedMessages)
+
+      spinner.text = `Downloaded ${messages.length} messages of ${parseInt(
+        messageCount - latestDownloadedMessageId,
+        10
+      ).toLocaleString()} in ${flowName}`
+      // download the next batch, starting from the latest downloaded message id
+      return downloadFlowDockMessages(
+        flowName,
+        latestDownloadedMessageId,
+        messages,
+        users,
+        messageCount
+      )
     })
     .catch(error => console.log(error))
 }
