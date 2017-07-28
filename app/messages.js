@@ -2,21 +2,25 @@
 const ora = require('ora')
 const moment = require('moment')
 const { makeRequest } = require('./http.js')
-const spinner = ora('').start()
 const { saveToElasticsearch } = require('./elasticsearch.js')
 const _ = require('underscore')
+const spinner = ora('')
+// returns an array of messages
 function downloadMoreMessages (sinceId, flowName) {
   return makeRequest({
-    url: `${flowName}/messages?&since_id=${sinceId}&sort=asc&limit=100`,
+    url: `${flowName}/messages?&since_id=${sinceId}&sort=asc&limit=20`,
     method: 'get'
   })
 }
 
+// message structure is different between threads and normal messages
 function getMessageContent (message) {
+  // it's empty
   if (!message || !message.content) {
     return
   }
 
+  // it's a thread
   if (
     typeof message.content === 'object' &&
     typeof message.content.text === 'string'
@@ -24,13 +28,16 @@ function getMessageContent (message) {
     return message.content.text
   }
 
+  // it's a normal message
   return message.content
 }
+
 function getThreadURL (message, flowName) {
   if (message.thread_id) {
-    return `/${flowName}/threads/${message.thread_id}`
+    return `https://flowdock.com/app/${flowName}/threads/${message.thread_id}`
   }
 }
+
 function decorateMessageProps (messages, flowName) {
   return messages.map(message => ({
     id: message.id,
@@ -67,15 +74,19 @@ function addUserInfoToMessages (users = [], messages = []) {
 }
 
 // give it a flowname and it downloads everything
-function downloadFlowDockMessages (
+// and feeds messages into elasticsearch batch by batch
+// calls itself again as long as there are messages to download
+async function downloadFlowDockMessages (
   flowName,
   latestDownloadedMessageId = 0,
   messages = [],
-  users
+  users,
+  messageCount
 ) {
-  // download the first set
-  return downloadMoreMessages(latestDownloadedMessageId, flowName)
+  // download the first batch
+  downloadMoreMessages(latestDownloadedMessageId, flowName)
     .then(({ data }) => {
+      spinner.start()
       if (data.length > 0) {
         latestDownloadedMessageId =
           data[data.length - 1] && data[data.length - 1].id
@@ -88,24 +99,30 @@ function downloadFlowDockMessages (
           messagesWithUserInfo,
           flowName
         )
+
+        // feed the current batch of messages to Elasticsearch
         decoratedMessages.forEach(message => {
           if (message && message.content) {
             saveToElasticsearch(message)
           }
         })
+
         messages = messages.concat(decoratedMessages)
-        spinner.text = `Downloaded ${messages.length} Messages so far`
+        spinner.text = `Downloaded ${messages.length} messages of ${parseInt(
+          messageCount,
+          10
+        ).toLocaleString()}`
         // download the next batch, starting from the latest downloaded message id
         return downloadFlowDockMessages(
           flowName,
           latestDownloadedMessageId,
           messages,
-          users
+          users,
+          messageCount
         )
       } else {
         // console.log('no more messages to download');
-        spinner.succeed('Download completed')
-
+        spinner.succeed(`Download completed for ${flowName}`)
         return messages
       }
     })
@@ -113,7 +130,7 @@ function downloadFlowDockMessages (
 }
 
 // Return the number of messages in the flow, which seems to be just the latest message id
-function getMessagesCount (flowName) {
+async function getMessagesCount (flowName) {
   return makeRequest({
     url: `${flowName}/messages?limit=1`,
     method: 'get'

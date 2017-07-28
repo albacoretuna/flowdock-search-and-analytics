@@ -3,3 +3,13 @@
 # your flowdock api token here which can be found at
 # https://www.flowdock.com/account/tokens
 FLOWDOCK_PERSONAL_API_TOKEN=c656ccab5x30353a7ec32s4s2b91c146
+
+# list in the form of ['organizationName/FlowName']
+# all flows are in lowercase with dash, instead of spaces in the name
+# the following api call gives you all the flow names that you have access to
+# curl 'https://yourFlowdockApiTokenHere@api.flowdock.com/users'
+# this in chrome console will copy the string to your clip board!
+# var flows= // [make that api call and save the results into the flows]
+# copy(flows.map((flow)=> (`${flow.organization.parameterized_name}/${flow.parameterized_name}`)).join(', '))
+FLOWS_TO_DOWNLOAD='flowdock-organization-name/flow-name,another-organization/another-flow-name'
+

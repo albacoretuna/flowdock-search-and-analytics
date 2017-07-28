@@ -3,17 +3,19 @@ const client = new elasticsearch.Client({
   host: 'localhost:9200'
   // log: 'trace' // enable for debugging
 })
-createElasticsearchIndex()
 async function createElasticsearchIndex () {
   const indexName = 'flowdock-messages'
+  let indexExists = false
   try {
-    let indexExists = await client.indices.exists({ index: indexName })
-    if (indexExists) {
-      return
-    }
+    indexExists = await client.indices.exists({ index: indexName })
   } catch (error) {
-    console.log('Elasticsearch panic!: ', error)
+    console.log('Elasticsearch panic! Make sure elastic is running: ', error)
   }
+
+  if (indexExists) {
+    return
+  }
+
   try {
     let createIndex = await client.indices.create({
       index: indexName,
@@ -86,7 +88,7 @@ async function createElasticsearchIndex () {
                 }
               },
               flowId: {
-                type: 'keyword'
+                type: 'integer'
               },
               threadURL: {
                 type: 'text'
@@ -101,6 +103,21 @@ async function createElasticsearchIndex () {
   }
 }
 
+function getLatestMessageIdInFlow (flowName) {
+  return client.search({
+    index: 'flowdock-messages',
+    body: {
+      aggs: {
+        max_flowId: { max: { field: 'flowId' } }
+      },
+      query: {
+        type: {
+          value: `message-${flowName}`
+        }
+      }
+    }
+  })
+}
 function saveToElasticsearch (message) {
   return client.index(
     {
@@ -127,5 +144,6 @@ function saveToElasticsearch (message) {
 
 module.exports = {
   saveToElasticsearch,
-  createElasticsearchIndex
+  createElasticsearchIndex,
+  getLatestMessageIdInFlow
 }
