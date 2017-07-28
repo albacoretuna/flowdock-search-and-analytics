@@ -1,33 +1,34 @@
 # Flowdock Analytics
-
+ asdf asdf
 An app to import all flowdock messages into elastic search stack, so that search and analytics becomes easier for flowdock.
 
 ## Work in progress
 
 
 # Install
-```
+```basdfasdf
+# 1 
 git clone git@github.com:omidfi/flowdock-analytics.git
 cd flowdock-analytics
 npm install
 ```
-Copy app/env-sample to app/.env and add your flowdock api token to it
+2. Copy app/env-sample to app/.env and add your flowdock api token, and other details. 
+Your api tokenc can be found at [flowdock's user account ](https://www.flowdock.com/account/tokens).
 
 # Run
-```
+```asdfasdf
 # start elasticsearch
-cd docker-elk
-docker-compose up
+cd docker-elkasdf
+3. docker-compose up
 
 # start the app
 cd app
 node app/index.js
 ```
 
+
 # Developer notes
 What are we trying to achieve here?
-
-## Goals
 Import all the flows into elasticsearch.
 
 ## How?
