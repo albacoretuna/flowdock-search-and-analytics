@@ -6,7 +6,7 @@ An app to import all flowdock messages into elastic search stack, so that search
 
 
 # Install
-```basdfasdf
+```bash
 # 1 
 git clone git@github.com:omidfi/flowdock-analytics.git
 cd flowdock-analytics
@@ -15,17 +15,17 @@ npm install
 2. Copy app/env-sample to app/.env and add your flowdock api token, and other details. 
 Your api tokenc can be found at [flowdock's user account ](https://www.flowdock.com/account/tokens).
 
-# Run
-```asdfasdf
+```bash
+#3
 # start elasticsearch
 cd docker-elkasdf
-3. docker-compose up
+docker-compose up
 
 # start the app
 cd app
 node app/index.js
 ```
-
+This process might take some time depending on the number of messages that need to be indexed. 
 
 # Developer notes
 What are we trying to achieve here?
