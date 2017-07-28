@@ -1,4 +1,5 @@
 const elasticsearch = require('elasticsearch')
+const _ = require('underscore')
 const client = new elasticsearch.Client({
   host: 'localhost:9200'
   // log: 'trace' // enable for debugging
@@ -87,6 +88,15 @@ async function createElasticsearchIndex () {
                   }
                 }
               },
+              organization: {
+                type: 'text',
+                fields: {
+                  keyword: {
+                    type: 'keyword',
+                    ignore_above: 256
+                  }
+                }
+              },
               flowId: {
                 type: 'integer'
               },
@@ -118,26 +128,50 @@ function getLatestMessageIdInFlow (flowName) {
     }
   })
 }
-function saveToElasticsearch (message) {
-  return client.index(
+
+function decorateElasticObject (message) {
+  return [
     {
-      index: 'flowdock-messages',
-      id: message.uuid,
-      type: `message-${message.flowName}`,
-      body: {
-        flowId: message.flowId,
-        content: message.content,
-        sentTimeReadable: message.sentTimeReadable,
-        sentEpoch: message.sentEpoch,
-        user: message.user,
-        userNick: message.nick,
-        name: message.name,
-        flowName: message.flowName,
-        threadURL: message.threadURL
+      index: {
+        _index: 'flowdock-messages',
+        _id: message.uuid,
+        _type: `message-${message.flowName}`
       }
     },
-    function (error, response) {
-      if (error) console.log('elastic search panic! ', error)
+    {
+      flowId: message.flowId,
+      content: message.content,
+      sentTimeReadable: message.sentTimeReadable,
+      sentEpoch: message.sentEpoch,
+      user: message.user,
+      userNick: message.nick,
+      name: message.name,
+      flowName: message.flowName,
+      organization: message.organization,
+      threadURL: message.threadURL
+    }
+  ]
+}
+
+function saveToElasticsearch (messages) {
+  let decoratedMessages = messages.map(decorateElasticObject)
+  let decoratedMessagesWithBody = decoratedMessages.filter(
+    el => el.length === 2
+  )
+  let flatDecoratedMessages = decoratedMessagesWithBody.reduce(
+    (a, b) => a.concat(b),
+    []
+  )
+
+  if (flatDecoratedMessages.length < 1) {
+    return
+  }
+  client.bulk(
+    {
+      body: flatDecoratedMessages
+    },
+    function (err, resp) {
+      if (err) console.log('elastic search panic! ', err)
     }
   )
 }

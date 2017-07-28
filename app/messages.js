@@ -8,7 +8,7 @@ const spinner = ora('')
 // returns an array of messages
 function downloadMoreMessages (sinceId, flowName) {
   return makeRequest({
-    url: `${flowName}/messages?&since_id=${sinceId}&sort=asc&limit=20`,
+    url: `${flowName}/messages?&since_id=${sinceId}&sort=asc&limit=100`,
     method: 'get'
   })
 }
@@ -50,13 +50,14 @@ function decorateMessageProps (messages, flowName) {
     content: getMessageContent(message),
     threadURL: getThreadURL(message, flowName),
     flowName: flowName,
+    organization: flowName.split('/')[0],
     sentEpoch: message.sent,
     sentTimeReadable: moment(message.sent).format('HH:mm - DD-MM-YYYY')
   }))
 }
 
 // remove the unneeded event types, like user nick name changes etc
-function keepOnlyMessageEvents (messages) {
+function keepOnlyMessageEvents (messages = []) {
   return messages.filter(
     message => message.event === 'message' || message.event === 'comment'
   )
@@ -101,17 +102,14 @@ async function downloadFlowDockMessages (
         )
 
         // feed the current batch of messages to Elasticsearch
-        decoratedMessages.forEach(message => {
-          if (message && message.content) {
-            saveToElasticsearch(message)
-          }
-        })
+        saveToElasticsearch(decoratedMessages)
 
         messages = messages.concat(decoratedMessages)
+
         spinner.text = `Downloaded ${messages.length} messages of ${parseInt(
           messageCount,
           10
-        ).toLocaleString()}`
+        ).toLocaleString()} in ${flowName}`
         // download the next batch, starting from the latest downloaded message id
         return downloadFlowDockMessages(
           flowName,
