@@ -78,6 +78,22 @@ function addUserInfoToMessages (users = [], messages = []) {
   })
 }
 
+function setSpinnerText (
+  spinner,
+  messages,
+  flowName,
+  messageCount,
+  latestDownloadedMessageId
+) {
+  let remainingToDownload = messageCount - latestDownloadedMessageId
+  spinner.text =
+    'Downloaded ' +
+    messages.length +
+    ' messages of ' +
+    parseInt(remainingToDownload, 10).toLocaleString() +
+    ' in ' +
+    flowName
+}
 // give it a flowname and it downloads everything
 // and feeds messages into elasticsearch batch by batch
 // calls itself again as long as there are messages to download
@@ -117,10 +133,14 @@ async function downloadFlowDockMessages (
 
       messages = messages.concat(decoratedMessages)
 
-      spinner.text = `Downloaded ${messages.length} messages of ${parseInt(
-        messageCount - latestDownloadedMessageId,
-        10
-      ).toLocaleString()} in ${flowName}`
+      setSpinnerText(
+        spinner,
+        messages,
+        flowName,
+        messageCount,
+        latestDownloadedMessageId
+      )
+
       // download the next batch, starting from the latest downloaded message id
       return downloadFlowDockMessages(
         flowName,
@@ -134,11 +154,13 @@ async function downloadFlowDockMessages (
 }
 
 // Return the number of messages in the flow, which seems to be just the latest message id
-async function getMessagesCount (flowName) {
+function getMessagesCount (flowName) {
   return makeRequest({
     url: `${flowName}/messages?limit=1`,
     method: 'get'
   })
+    .then(({ data }) => data[0].id)
+    .catch(error => console.log('Message Count Panic: ', error))
 }
 
 module.exports = {

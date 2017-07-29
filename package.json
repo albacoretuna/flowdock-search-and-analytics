@@ -5,13 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app/index.js",
     "precommit": "lint-staged",
     "format": "prettier-standard 'app/**/*.js'"
   },
   "author": "Omid",
   "license": "MIT",
-  "repository":"git@github.com:omidfi/flowdock-analytics.git",
+  "repository": "git@github.com:omidfi/flowdock-analytics.git",
   "lint-staged": {
     "linters": {
       "app/**/*.js": [

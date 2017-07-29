@@ -114,19 +114,22 @@ async function createElasticsearchIndex () {
 }
 
 function getLatestMessageIdInFlow (flowName) {
-  return client.search({
-    index: INDEX_NAME,
-    body: {
-      aggs: {
-        max_flowId: { max: { field: 'flowId' } }
-      },
-      query: {
-        type: {
-          value: `message-${flowName}`
+  return client
+    .search({
+      index: INDEX_NAME,
+      body: {
+        aggs: {
+          max_flowId: { max: { field: 'flowId' } }
+        },
+        query: {
+          type: {
+            value: `message-${flowName}`
+          }
         }
       }
-    }
-  })
+    })
+    .then(data => data.aggregations['max_flowId'].value)
+    .catch(error => console.log('getLatestMessageId Panic! :', error))
 }
 
 function decorateElasticObject (message) {

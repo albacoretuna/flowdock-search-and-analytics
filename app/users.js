@@ -6,6 +6,8 @@ async function getUsers () {
     baseURL: `https://api.flowdock.com/users`,
     method: 'get'
   })
+    .then(({ data }) => data)
+    .catch(error => console.log('getUsers panic!: ', error))
 }
 
 module.exports = {

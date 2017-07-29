@@ -23,27 +23,22 @@ console.log(
 
 async function init () {
   await createElasticsearchIndex()
-  let requestUsers = await getUsers()
-  let users = requestUsers.data
-
-  flowsToDownload.forEach(async flowName => {
+  let users = await getUsers()
+  let downloadOneFlow = async flowName => {
     try {
-      let requestMessageCount = await getMessagesCount(flowName)
-      let messageCount = requestMessageCount.data[0].id
-      let requestLatestMessageId = await getLatestMessageIdInFlow(flowName)
-      latestMessageIdInFlow =
-        requestLatestMessageId.aggregations['max_flowId'].value
       await downloadFlowDockMessages(
         flowName,
-        latestMessageIdInFlow,
+        await getLatestMessageIdInFlow(flowName),
         [],
         users,
-        messageCount
+        await getMessagesCount(flowName)
       )
     } catch (error) {
       console.log(error)
     }
-  })
+  }
+
+  flowsToDownload.forEach(downloadOneFlow)
 }
 
 init()
