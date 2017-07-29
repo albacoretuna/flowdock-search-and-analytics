@@ -6,7 +6,6 @@ const ora = require('ora')
 const moment = require('moment')
 const { makeRequest } = require('./http.js')
 const { saveToElasticsearch } = require('./elasticsearch.js')
-const _ = require('underscore')
 const spinner = ora('')
 
 // returns an array of messages
@@ -69,12 +68,10 @@ function keepOnlyMessageEvents (messages = []) {
 
 // matches messages with nick names if possible
 function addUserInfoToMessages (users = [], messages = []) {
-  return _.map(messages, function (message) {
-    return Object.assign(
-      {},
-      message,
-      _.findWhere(users, { id: parseInt(message.user, 10) })
-    )
+  return messages.map(msg => {
+    let haveEqualId = user => user.id === parseInt(msg.user, 10)
+    let userWithEqualId = users.find(haveEqualId)
+    return Object.assign({}, msg, userWithEqualId)
   })
 }
 
