@@ -13,16 +13,19 @@ const flowsToDownload = process.env.FLOWS_TO_DOWNLOAD
   .replace(/ /gm, '')
   .split(',')
 
-logger.info(
-  'Hello! starting to download and index messages for',
-  flowsToDownload.length,
-  'flows.',
-  '\n Total message numbers are just estimates.',
-  '\n Only new messages after the last indexing will be downloaded'
-)
+function welcomeMessage () {
+  logger.info(
+    'Hello! starting to download and index messages for',
+    flowsToDownload.length,
+    'flows.',
+    '\n Total message numbers are just estimates.',
+    '\n Only new messages after the last indexing will be downloaded'
+  )
+}
 
 async function init () {
   await createElasticsearchIndex()
+  welcomeMessage()
   let users = await getUsers()
   let downloadOneFlow = async flowName => {
     try {

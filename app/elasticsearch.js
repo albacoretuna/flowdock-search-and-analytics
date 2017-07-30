@@ -11,7 +11,9 @@ async function createElasticsearchIndex () {
   try {
     indexExists = await client.indices.exists({ index: INDEX_NAME })
   } catch (error) {
-    logger.error('Elasticsearch panic! Make sure elastic is running: ', error)
+    logger.error('Elasticsearch panic!')
+    logger.error('Elasticsearch says: ', error)
+    process.exit(1)
   }
 
   if (indexExists) {
