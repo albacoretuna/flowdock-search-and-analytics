@@ -2,11 +2,15 @@
  * CREDITS:
  * This app really helped with understanding flowdock api: https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
  **/
+'use strict'
 const ora = require('ora')
 const moment = require('moment')
 const { makeRequest } = require('./http.js')
 const { saveToElasticsearch } = require('./elasticsearch.js')
-const spinner = ora('')
+const spinner = new ora({
+  enabled: process.env.LOGLEVEL !== 'error'
+})
+const { logger } = require('./logger.js')
 
 // returns an array of messages
 function downloadMoreMessages (sinceId, flowName) {
@@ -84,12 +88,14 @@ function setSpinnerText (
 ) {
   let remainingToDownload = messageCount - latestDownloadedMessageId
   spinner.text =
-    'Downloaded ' +
-    messages.length +
-    ' messages of ' +
-    parseInt(remainingToDownload, 10).toLocaleString() +
-    ' in ' +
-    flowName
+    process.env.LOGLEVEL === 'error'
+      ? ''
+      : 'Downloaded ' +
+        messages.length +
+        ' messages of ' +
+        parseInt(remainingToDownload, 10).toLocaleString() +
+        ' in ' +
+        flowName
 }
 // give it a flowname and it downloads everything
 // and feeds messages into elasticsearch batch by batch
@@ -108,8 +114,10 @@ async function downloadFlowDockMessages (
 
       // no more messages to download
       if (data.length < 1) {
-        // console.log('no more messages to download');
-        spinner.succeed(`Download completed for ${flowName}`)
+        if (process.env.LOGLEVEL !== 'error') {
+          // console.log('no more messages to download');
+          spinner.succeed(`Download completed for ${flowName}`)
+        }
         return messages
       }
       latestDownloadedMessageId =
@@ -147,7 +155,7 @@ async function downloadFlowDockMessages (
         messageCount
       )
     })
-    .catch(error => console.log(error))
+    .catch(error => logger.error(error))
 }
 
 // Return the number of messages in the flow, which seems to be just the latest message id
@@ -157,7 +165,7 @@ function getMessagesCount (flowName) {
     method: 'get'
   })
     .then(({ data }) => data[0].id)
-    .catch(error => console.log('Message Count Panic: ', error))
+    .catch(error => logger.error('Message Count Panic: ', error))
 }
 
 module.exports = {

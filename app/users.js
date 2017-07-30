@@ -1,4 +1,5 @@
 const { makeRequest } = require('./http.js')
+const { logger } = require('./logger.js')
 
 // gets all the users that the token owner is allowed to see
 async function getUsers () {
@@ -7,7 +8,7 @@ async function getUsers () {
     method: 'get'
   })
     .then(({ data }) => data)
-    .catch(error => console.log('getUsers panic!: ', error))
+    .catch(error => logger.error('getUsers panic!: ', error))
 }
 
 module.exports = {

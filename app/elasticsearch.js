@@ -1,7 +1,9 @@
 const elasticsearch = require('elasticsearch')
+const { logger } = require('./logger.js')
+
 const client = new elasticsearch.Client({
-  host: process.env.ELASTICSEARCH_HOST
-  // log: 'trace' // enable for debugging
+  host: process.env.ELASTICSEARCH_HOST,
+  log: process.env.LOGLEVEL === 'debug' ? 'trace' : ''
 })
 const INDEX_NAME = process.env.INDEX_NAME || 'flowdock-messages'
 async function createElasticsearchIndex () {
@@ -9,7 +11,7 @@ async function createElasticsearchIndex () {
   try {
     indexExists = await client.indices.exists({ index: INDEX_NAME })
   } catch (error) {
-    console.log('Elasticsearch panic! Make sure elastic is running: ', error)
+    logger.error('Elasticsearch panic! Make sure elastic is running: ', error)
   }
 
   if (indexExists) {
@@ -108,7 +110,7 @@ async function createElasticsearchIndex () {
       }
     })
   } catch (indexError) {
-    console.log('Elastic search index creation panic!', indexError)
+    logger.error('Elastic search index creation panic!', indexError)
   }
 }
 
@@ -128,7 +130,7 @@ function getLatestMessageIdInFlow (flowName) {
       }
     })
     .then(data => data.aggregations['max_flowId'].value)
-    .catch(error => console.log('getLatestMessageId Panic! :', error))
+    .catch(error => logger.error('getLatestMessageId Panic! :', error))
 }
 
 function decorateElasticObject (message) {
@@ -173,7 +175,7 @@ function saveToElasticsearch (messages) {
       body: flatDecoratedMessages
     },
     function (err, resp) {
-      if (err) console.log('elastic search panic! ', err)
+      if (err) logger.error('elastic search panic! ', err)
     }
   )
 }

@@ -1,4 +1,6 @@
+'use strict'
 require('dotenv').config()
+const { logger } = require('./logger.js')
 const { getMessagesCount, downloadFlowDockMessages } = require('./messages.js')
 const { getUsers } = require('./users.js')
 const {
@@ -11,13 +13,11 @@ const flowsToDownload = process.env.FLOWS_TO_DOWNLOAD
   .replace(/ /gm, '')
   .split(',')
 
-console.log(
-  'Hello! starting to download and index messages',
+logger.info(
+  'Hello! starting to download and index messages for',
   flowsToDownload.length,
-  'flows'
-)
-console.log(
-  'Total message numbers are just estimates.',
+  'flows.',
+  '\n Total message numbers are just estimates.',
   '\n Only new messages after the last indexing will be downloaded'
 )
 
@@ -34,7 +34,7 @@ async function init () {
         await getMessagesCount(flowName)
       )
     } catch (error) {
-      console.log(error)
+      logger.error(error)
     }
   }
 
