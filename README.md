@@ -15,7 +15,7 @@ Your api tokenc can be found at [flowdock's user account page ](https://www.flow
 3.
 ```bash
 # start elasticsearch
-cd docker-elkasdf
+cd docker-elk
 docker-compose up
 ```
 4.
