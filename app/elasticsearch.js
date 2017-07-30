@@ -1,7 +1,7 @@
 const elasticsearch = require('elasticsearch')
 const _ = require('underscore')
 const client = new elasticsearch.Client({
-  host: 'localhost:9200'
+  host: process.env.ELASTICSEARCH_HOST
   // log: 'trace' // enable for debugging
 })
 const INDEX_NAME = process.env.INDEX_NAME || 'flowdock-messages'
@@ -27,7 +27,7 @@ async function createElasticsearchIndex () {
           }
         },
         mappings: {
-          'messages-*': {
+          '*-messages': {
             properties: {
               content: {
                 type: 'text',
@@ -123,7 +123,7 @@ function getLatestMessageIdInFlow (flowName) {
         },
         query: {
           type: {
-            value: `message-${flowName}`
+            value: `${flowName}-message`
           }
         }
       }
@@ -138,7 +138,7 @@ function decorateElasticObject (message) {
       index: {
         _index: INDEX_NAME,
         _id: message.uuid,
-        _type: `message-${message.flowName}`
+        _type: `${message.flowName}-message`
       }
     },
     {
