@@ -7,9 +7,7 @@ const ora = require('ora')
 const moment = require('moment')
 const { makeRequest } = require('./http.js')
 const { saveToElasticsearch } = require('./elasticsearch.js')
-const spinner = new ora({
-  enabled: process.env.LOGLEVEL !== 'error'
-})
+const spinner = new ora()
 const { logger } = require('./logger.js')
 
 // returns an array of messages
@@ -88,14 +86,12 @@ function setSpinnerText (
 ) {
   let remainingToDownload = messageCount - latestDownloadedMessageId
   spinner.text =
-    process.env.LOGLEVEL === 'error'
-      ? ''
-      : 'Downloaded ' +
-        messages.length +
-        ' messages of ' +
-        parseInt(remainingToDownload, 10).toLocaleString() +
-        ' in ' +
-        flowName
+    'Downloaded ' +
+    messages.length +
+    ' messages of ' +
+    parseInt(remainingToDownload, 10).toLocaleString() +
+    ' in ' +
+    flowName
 }
 // give it a flowname and it downloads everything
 // and feeds messages into elasticsearch batch by batch
@@ -114,12 +110,11 @@ async function downloadFlowDockMessages (
 
       // no more messages to download
       if (data.length < 1) {
-        if (process.env.LOGLEVEL !== 'error') {
-          // console.log('no more messages to download');
-          spinner.succeed(`Download completed for ${flowName}`)
-        }
+        // console.log('no more messages to download');
+        spinner.succeed(`Download completed for ${flowName}`)
         return messages
       }
+
       latestDownloadedMessageId =
         data[data.length - 1] && data[data.length - 1].id
       let messagesWithContent = keepOnlyMessageEvents(data)

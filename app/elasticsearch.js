@@ -13,6 +13,7 @@ async function createElasticsearchIndex () {
   } catch (error) {
     logger.error('Elasticsearch panic!')
     logger.error('Elasticsearch says: ', error)
+    logger.debug('Elastic host: ', process.env.ELASTICSEARCH_HOST)
     process.exit(1)
   }
 
