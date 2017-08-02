@@ -44,40 +44,6 @@ function getThreadURL (message, flowName) {
   }
 }
 
-function decorateMessageProps (messages, flowName) {
-  return messages.map(message => ({
-    id: message.id,
-    uuid: message.uuid,
-    flowId: message.id,
-    event: message.event,
-    user: message.user,
-    nick: message.nick,
-    name: message.name,
-    content: getMessageContent(message),
-    threadURL: getThreadURL(message, flowName),
-    flowName: flowName,
-    organization: flowName.split('/')[0],
-    sentEpoch: message.sent,
-    sentTimeReadable: moment(message.sent).format('HH:mm - DD-MM-YYYY')
-  }))
-}
-
-// remove the unneeded event types, like user nick name changes etc
-function keepOnlyMessageEvents (messages = []) {
-  return messages.filter(
-    message => message.event === 'message' || message.event === 'comment'
-  )
-}
-
-// matches messages with nick names if possible
-function addUserInfoToMessages (users = [], messages = []) {
-  return messages.map(msg => {
-    let haveEqualId = user => user.id === parseInt(msg.user, 10)
-    let userWithEqualId = users.find(haveEqualId)
-    return Object.assign({}, msg, userWithEqualId)
-  })
-}
-
 function setSpinnerText (
   spinner,
   messages,
@@ -86,18 +52,18 @@ function setSpinnerText (
   latestDownloadedMessageId
 ) {
   let remainingToDownload = messageCount - latestDownloadedMessageId
-  spinner.text = `Indexed ${messages.length} messages of ${parseInt(
+  spinner.text = `Indexed ${messages.length} messages of probably ${parseInt(
     remainingToDownload,
     10
   ).toLocaleString()} in ${flowName}`
 }
 function setSpinnerSucceed (spinner, flowName, indexingStat) {
-  debugger
   let getUpdateStats = indexingStat => {
     if (indexingStat['flowName']) {
       return ` | updated: ${indexingStat['flowName']
         .updated} created: ${indexingStat['flowName'].created}`
     }
+    return ''
   }
   spinner.succeed(`Indexing done: ${flowName} ${getUpdateStats(indexingStat)}`)
 }
@@ -119,8 +85,7 @@ function getStat (elasticsearchResponse) {
 
   let initialValue = { updated: 0, created: 0 }
 
-  let results = elasticsearchResponse.items.reduce(reducer, initialValue)
-  return results
+  return elasticsearchResponse.items.reduce(reducer, initialValue)
 }
 
 // give it a flowname and it downloads everything
@@ -145,17 +110,33 @@ async function downloadFlowDockMessages (
       }
 
       latestDownloadedMessageId =
-        data[data.length - 1] && data[data.length - 1].id
-      let messagesWithContent = keepOnlyMessageEvents(data)
-      let messagesWithUserInfo = addUserInfoToMessages(
-        users,
-        messagesWithContent
-      )
+        latestDownloadedMessageId ||
+        (data[data.length - 1] && data[data.length - 1].id)
 
-      let decoratedMessages = decorateMessageProps(
-        messagesWithUserInfo,
-        flowName
-      )
+      let decoratedMessages = data
+        .filter(
+          message => message.event === 'message' || message.event === 'comment'
+        )
+        .map(msg => {
+          let haveEqualId = user => user.id === parseInt(msg.user, 10)
+          let userWithEqualId = users.find(haveEqualId)
+          return Object.assign({}, msg, userWithEqualId)
+        })
+        .map(message => ({
+          id: message.id,
+          uuid: message.uuid,
+          flowId: message.id,
+          event: message.event,
+          user: message.user,
+          nick: message.nick,
+          name: message.name,
+          content: getMessageContent(message),
+          threadURL: getThreadURL(message, flowName),
+          flowName: flowName,
+          organization: flowName.split('/')[0],
+          sentEpoch: message.sent,
+          sentTimeReadable: moment(message.sent).format('HH:mm - DD-MM-YYYY')
+        }))
 
       // feed the current batch of messages to Elasticsearch
       await saveToElasticsearch(decoratedMessages)
@@ -166,6 +147,7 @@ async function downloadFlowDockMessages (
         .catch(error => {
           logger.error('savetoElasticsearch panic! ', error)
         })
+
       messages = messages.concat(decoratedMessages)
 
       setSpinnerText(
