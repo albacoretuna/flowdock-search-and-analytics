@@ -136,34 +136,9 @@ function getLatestMessageIdInFlow (flowName) {
     .catch(error => logger.error('getLatestMessageId Panic! :', error))
 }
 
-function decorateElasticObject (message) {
-  return [
-    {
-      index: {
-        _index: INDEX_NAME,
-        _id: message.uuid,
-        _type: `${message.flowName}-message`
-      }
-    },
-    {
-      flowId: message.flowId,
-      content: message.content,
-      sentTimeReadable: message.sentTimeReadable,
-      sentEpoch: message.sentEpoch,
-      user: message.user,
-      userNick: message.nick,
-      name: message.name,
-      flowName: message.flowName,
-      organization: message.organization,
-      threadURL: message.threadURL
-    }
-  ]
-}
-
 function saveToElasticsearch (messages) {
   let flatDecoratedMessages = messages
-    .map(decorateElasticObject)
-    .filter(el => el.length === 2 && el[1].lenght !== 0)
+    .filter(el => el.length === 2 && el[1].length !== 0)
     .reduce((a, b) => a.concat(b), [])
 
   if (flatDecoratedMessages.length < 1) {

@@ -9,8 +9,10 @@ const { makeRequest } = require('./http.js')
 const { saveToElasticsearch } = require('./elasticsearch.js')
 const spinner = new ora()
 const { logger } = require('./logger.js')
+const INDEX_NAME = process.env.INDEX_NAME || 'flowdock-messages'
 
 let indexingStat = {}
+
 // returns an array of messages
 function downloadMoreMessages (sinceId, flowName) {
   return makeRequest({
@@ -51,20 +53,22 @@ function setSpinnerText (
   messageCount,
   latestDownloadedMessageId
 ) {
-  let remainingToDownload = messageCount - latestDownloadedMessageId
-  spinner.text = `Indexed ${messages.length} messages of probably ${parseInt(
-    remainingToDownload,
+  let remainingToDownload = parseInt(
+    messageCount - latestDownloadedMessageId,
     10
-  ).toLocaleString()} in ${flowName}`
+  )
+  spinner.text = `Indexed ${messages.length} of ${flowName} Remaining: ${remainingToDownload.toLocaleString()}`
 }
+
 function setSpinnerSucceed (spinner, flowName, indexingStat) {
   let getUpdateStats = indexingStat => {
-    if (indexingStat['flowName']) {
-      return ` | updated: ${indexingStat['flowName']
-        .updated} created: ${indexingStat['flowName'].created}`
+    if (!indexingStat['flowName']) {
+      return ''
     }
-    return ''
+    return ` | updated: ${indexingStat['flowName']
+      .updated} created: ${indexingStat['flowName'].created}`
   }
+
   spinner.succeed(`Indexing done: ${flowName} ${getUpdateStats(indexingStat)}`)
 }
 function getStat (elasticsearchResponse) {
@@ -110,8 +114,7 @@ async function downloadFlowDockMessages (
       }
 
       latestDownloadedMessageId =
-        latestDownloadedMessageId ||
-        (data[data.length - 1] && data[data.length - 1].id)
+        data[data.length - 1] && data[data.length - 1].id
 
       let decoratedMessages = data
         .filter(
@@ -122,21 +125,28 @@ async function downloadFlowDockMessages (
           let userWithEqualId = users.find(haveEqualId)
           return Object.assign({}, msg, userWithEqualId)
         })
-        .map(message => ({
-          id: message.id,
-          uuid: message.uuid,
-          flowId: message.id,
-          event: message.event,
-          user: message.user,
-          nick: message.nick,
-          name: message.name,
-          content: getMessageContent(message),
-          threadURL: getThreadURL(message, flowName),
-          flowName: flowName,
-          organization: flowName.split('/')[0],
-          sentEpoch: message.sent,
-          sentTimeReadable: moment(message.sent).format('HH:mm - DD-MM-YYYY')
-        }))
+        .map(message => [
+          {
+            index: {
+              _index: INDEX_NAME,
+              _id: message.uuid,
+              _type: `${flowName}-message`
+            }
+          },
+          {
+            flowId: message.id,
+            content: getMessageContent(message),
+            sentTimeReadable: message.sentTimeReadable,
+            sentTimeReadable: moment(message.sent).format('HH:mm DD-MM-YYYY'),
+            sentEpoch: message.sent,
+            user: message.user,
+            userNick: message.nick,
+            name: message.name,
+            flowName: flowName,
+            organization: flowName.split('/')[0],
+            threadURL: getThreadURL(message, flowName)
+          }
+        ])
 
       // feed the current batch of messages to Elasticsearch
       await saveToElasticsearch(decoratedMessages)
