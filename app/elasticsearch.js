@@ -161,26 +161,18 @@ function decorateElasticObject (message) {
 }
 
 function saveToElasticsearch (messages) {
-  let decoratedMessages = messages.map(decorateElasticObject)
-  let decoratedMessagesWithBody = decoratedMessages.filter(
-    el => el.length === 2
-  )
-  let flatDecoratedMessages = decoratedMessagesWithBody.reduce(
-    (a, b) => a.concat(b),
-    []
-  )
+  let flatDecoratedMessages = messages
+    .map(decorateElasticObject)
+    .filter(el => el.length === 2 && el[1].lenght !== 0)
+    .reduce((a, b) => a.concat(b), [])
 
   if (flatDecoratedMessages.length < 1) {
-    return
+    return Promise.resolve({ items: [] })
   }
-  client.bulk(
-    {
-      body: flatDecoratedMessages
-    },
-    function (err, resp) {
-      if (err) logger.error('elastic search panic! ', err)
-    }
-  )
+
+  return client.bulk({
+    body: flatDecoratedMessages
+  })
 }
 
 module.exports = {

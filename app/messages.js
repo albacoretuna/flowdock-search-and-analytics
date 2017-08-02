@@ -10,6 +10,7 @@ const { saveToElasticsearch } = require('./elasticsearch.js')
 const spinner = new ora()
 const { logger } = require('./logger.js')
 
+let indexingStat = {}
 // returns an array of messages
 function downloadMoreMessages (sinceId, flowName) {
   return makeRequest({
@@ -85,14 +86,43 @@ function setSpinnerText (
   latestDownloadedMessageId
 ) {
   let remainingToDownload = messageCount - latestDownloadedMessageId
-  spinner.text =
-    'Downloaded ' +
-    messages.length +
-    ' messages of ' +
-    parseInt(remainingToDownload, 10).toLocaleString() +
-    ' in ' +
-    flowName
+  spinner.text = `Indexed ${messages.length} messages of ${parseInt(
+    remainingToDownload,
+    10
+  ).toLocaleString()} in ${flowName}`
 }
+function setSpinnerSucceed (spinner, flowName, indexingStat) {
+  debugger
+  let getUpdateStats = indexingStat => {
+    if (indexingStat['flowName']) {
+      return ` | updated: ${indexingStat['flowName']
+        .updated} created: ${indexingStat['flowName'].created}`
+    }
+  }
+  spinner.succeed(`Indexing done: ${flowName} ${getUpdateStats(indexingStat)}`)
+}
+function getStat (elasticsearchResponse) {
+  let reducer = (result, item) => {
+    switch (item['index']['result']) {
+      case 'updated':
+        result.updated = result.updated + 1
+        return result
+        break
+      case 'created':
+        result.created = result.created + 1
+        return result
+        break
+      default:
+        return result
+    }
+  }
+
+  let initialValue = { updated: 0, created: 0 }
+
+  let results = elasticsearchResponse.items.reduce(reducer, initialValue)
+  return results
+}
+
 // give it a flowname and it downloads everything
 // and feeds messages into elasticsearch batch by batch
 // calls itself again as long as there are messages to download
@@ -105,13 +135,12 @@ async function downloadFlowDockMessages (
 ) {
   // download the first batch
   downloadMoreMessages(latestDownloadedMessageId, flowName)
-    .then(({ data }) => {
+    .then(async ({ data }) => {
       spinner.start()
 
       // no more messages to download
       if (data.length < 1) {
-        // console.log('no more messages to download');
-        spinner.succeed(`Download completed for ${flowName}`)
+        setSpinnerSucceed(spinner, flowName, indexingStat)
         return messages
       }
 
@@ -129,8 +158,14 @@ async function downloadFlowDockMessages (
       )
 
       // feed the current batch of messages to Elasticsearch
-      saveToElasticsearch(decoratedMessages)
-
+      await saveToElasticsearch(decoratedMessages)
+        .then(response => getStat(response))
+        .then(result => {
+          indexingStat['flowName'] = result
+        })
+        .catch(error => {
+          logger.error('savetoElasticsearch panic! ', error)
+        })
       messages = messages.concat(decoratedMessages)
 
       setSpinnerText(
@@ -165,5 +200,6 @@ function getMessagesCount (flowName) {
 
 module.exports = {
   getMessagesCount,
-  downloadFlowDockMessages
+  downloadFlowDockMessages,
+  indexingStat
 }
