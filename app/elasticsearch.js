@@ -125,6 +125,7 @@ function getLatestMessageIdInFlow (flowName) {
     .search({
       index: INDEX_NAME,
       body: {
+        size: 0,
         aggs: {
           max_flowId: { max: { field: 'flowId' } }
         },

@@ -1,5 +1,10 @@
 'use strict'
+// libraries
 require('dotenv').config()
+const CronJob = require('cron').CronJob
+const timer = require('timer-stopwatch')
+
+// ours
 const { logger } = require('./logger.js')
 const { getMessagesCount, downloadFlowDockMessages } = require('./messages.js')
 const { getUsers } = require('./users.js')
@@ -7,7 +12,11 @@ const {
   createElasticsearchIndex,
   getLatestMessageIdInFlow
 } = require('./elasticsearch.js')
+let inProgress = false
 
+function setInProgress (value) {
+  inProgress = value
+}
 // instructions in ./env-sample file
 const flowsToDownload = process.env.FLOWS_TO_DOWNLOAD
   .replace(/ /gm, '')
@@ -24,6 +33,11 @@ function welcomeMessage () {
 }
 
 async function init () {
+  if (inProgress) return
+
+  setInProgress(true)
+  const stopWatch = new timer()
+  stopWatch.start()
   await createElasticsearchIndex()
   welcomeMessage()
   let users = await getUsers()
@@ -35,7 +49,9 @@ async function init () {
         messages: [],
         users,
         messageCount: await getMessagesCount(flowName),
-        isLastFlow: index === array.length - 1
+        flowsNumber: array.length,
+        stopWatch,
+        setInProgress
       })
     } catch (error) {
       logger.error(error)
@@ -45,4 +61,15 @@ async function init () {
   flowsToDownload.forEach(downloadOneFlow)
 }
 
-init()
+// to repeat indexing
+const job = new CronJob({
+  cronTime: '* * * * *',
+  onTick: function () {
+    init()
+  },
+  start: true
+})
+
+module.exports = {
+  init
+}

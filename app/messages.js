@@ -10,8 +10,8 @@ const { saveToElasticsearch } = require('./elasticsearch.js')
 const spinner = new ora()
 const { logger } = require('./logger.js')
 const INDEX_NAME = process.env.INDEX_NAME || 'flowdock-messages'
-
-let indexingStat = { total: { updated: 0, created: 0 } }
+// global store for all stats
+let indexingStat = { total: { updated: 0, created: 0, flowsDone: 0 } }
 
 // returns an array of messages
 function downloadMoreMessages (sinceId, flowName) {
@@ -69,7 +69,9 @@ function setSpinnerSucceed ({ spinner, flowName, indexingStat }) {
       .updated} created: ${indexingStat[flowName].created}`
   }
 
-  spinner.succeed(`Indexing done: ${flowName} ${getUpdateStats(indexingStat)}`)
+  spinner.succeed(`${flowName} ${getUpdateStats(indexingStat)}`)
+
+  indexingStat.total.flowsDone += 1
 }
 function getStat (elasticsearchResponse) {
   let reducer = (result, item) => {
@@ -90,6 +92,19 @@ function getStat (elasticsearchResponse) {
   let initialValue = { updated: 0, created: 0 }
 
   return elasticsearchResponse.items.reduce(reducer, initialValue)
+}
+
+function setStat (result, flowName) {
+  if (!indexingStat[flowName]) {
+    indexingStat[flowName] = result
+  } else {
+    indexingStat[flowName].updated =
+      indexingStat[flowName].updated + result.updated
+    indexingStat[flowName].created =
+      indexingStat[flowName].created + result.created
+  }
+  indexingStat.total.updated += result.updated
+  indexingStat.total.created += result.created
 }
 
 const formatMessages = (messages, users, flowName) =>
@@ -138,24 +153,31 @@ async function downloadFlowDockMessages ({
   messages = [],
   users,
   messageCount,
-  isLastFlow
+  flowsNumber,
+  stopWatch,
+  setInProgress
 }) {
   // download the first batch
   downloadMoreMessages(latestDownloadedMessageId, flowName)
     .then(async ({ data }) => {
       spinner.start()
+
       // no more messages to download
       if (data.length < 1) {
         setSpinnerSucceed({ spinner, flowName, indexingStat })
-        if (isLastFlow) {
+        if (indexingStat.total.flowsDone === flowsNumber) {
           logger.info(
-            'Index updated for all the flows \\o/',
-            indexingStat.total
+            `
+Index updated for ${flowsNumber} flows \\o/ updated: ${indexingStat.total
+              .updated}, created: ${indexingStat.total
+              .created} took: ${Math.floor(stopWatch.ms / 1000)}s
+`
           )
+          stopWatch.stop()
+          setInProgress(false)
         }
         return messages
       }
-
       latestDownloadedMessageId =
         data[data.length - 1] && data[data.length - 1].id
 
@@ -164,13 +186,7 @@ async function downloadFlowDockMessages ({
       // feed the current batch of messages to Elasticsearch
       await saveToElasticsearch(decoratedMessages)
         .then(response => getStat(response))
-        .then(result => {
-          indexingStat[flowName] = result
-          indexingStat.total.updated =
-            indexingStat.total.updated + result.updated
-          indexingStat.total.created =
-            indexingStat.total.created + result.created
-        })
+        .then(result => setStat(result, flowName))
         .catch(error => {
           logger.error('savetoElasticsearch panic! ', error)
         })
@@ -192,7 +208,9 @@ async function downloadFlowDockMessages ({
         messages,
         users,
         messageCount,
-        isLastFlow
+        flowsNumber,
+        stopWatch,
+        setInProgress
       })
     })
     .catch(error => logger.error(error))
