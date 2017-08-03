@@ -7,6 +7,7 @@
     "start": "node app/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "elk": "cd docker-elk && docker-compose up",
+    "list-flows": "node app/listFlows.js",
     "precommit": "lint-staged",
     "format": "prettier-standard 'app/**/*.js'"
   },

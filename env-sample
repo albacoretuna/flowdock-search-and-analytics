@@ -1,23 +1,19 @@
 # copy this file and rename it to .env, then fill it in!
 
-# your flowdock api token here which can be found at
+# 1. add a flowdock token
+# your flowdock api can be found at
 # https://www.flowdock.com/account/tokens
 FLOWDOCK_PERSONAL_API_TOKEN=c656ccab5x30353a7ec32s4s2b91c146
 
-# this is like the database name in elasticsearch land, choose it freely!
-INDEX_NAME='flowdock-messages'
+# 2. add an elasticsearch index name. This is like the database name in elasticsearch land, choose it freely!
+INDEX_NAME=flowdock-messages
 
+# 3. add an elasticsearch host
 # if you're using the docker-elk setup that came with this, the default localhost:9200 should work
-ELASTICSEARCH_HOST='localhost:9200'
+ELASTICSEARCH_HOST=localhost:9200
 
-
-# List flownames, seperated by commas like this: 'organizationName/FlowName'
-#
-# all flows are in lowercase with dash, instead of spaces in the name
-# the following api call gives you all the flow names that you have access to
-# curl 'https://yourFlowdockApiTokenHere@api.flowdock.com/flows'
-# this in chrome console will copy the string to your clip board!
-# var flows= // [make that api call and save the results into the flows]
-# copy(flows.map((flow)=> (`${flow.organization.parameterized_name}/${flow.parameterized_name}`)).join(', '))
-FLOWS_TO_DOWNLOAD='flowdock-organization-name/flow-name,another-organization/another-flow-name'
+# 4. add the list of flows you like to index
+# You can use this command to list all the flows that are accessible by your token:
+# $ npm run list-flows
+FLOWS_TO_DOWNLOAD=flowdock-organization-name/flow-name,another-organization/another-flow-name
 
