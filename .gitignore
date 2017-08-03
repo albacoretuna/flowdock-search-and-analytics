@@ -8,3 +8,4 @@ exports/*
 # exception to the rule
 !exports/.gitkeep
 docker-elk/elasticsearch/data/*
+*.swp

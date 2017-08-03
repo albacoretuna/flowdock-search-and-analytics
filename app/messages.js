@@ -9,8 +9,10 @@ const { makeRequest } = require('./http.js')
 const { saveToElasticsearch } = require('./elasticsearch.js')
 const spinner = new ora()
 const { logger } = require('./logger.js')
+const INDEX_NAME = process.env.INDEX_NAME || 'flowdock-messages'
 
-let indexingStat = {}
+let indexingStat = { total: { updated: 0, created: 0 } }
+
 // returns an array of messages
 function downloadMoreMessages (sinceId, flowName) {
   return makeRequest({
@@ -44,61 +46,29 @@ function getThreadURL (message, flowName) {
   }
 }
 
-function decorateMessageProps (messages, flowName) {
-  return messages.map(message => ({
-    id: message.id,
-    uuid: message.uuid,
-    flowId: message.id,
-    event: message.event,
-    user: message.user,
-    nick: message.nick,
-    name: message.name,
-    content: getMessageContent(message),
-    threadURL: getThreadURL(message, flowName),
-    flowName: flowName,
-    organization: flowName.split('/')[0],
-    sentEpoch: message.sent,
-    sentTimeReadable: moment(message.sent).format('HH:mm - DD-MM-YYYY')
-  }))
-}
-
-// remove the unneeded event types, like user nick name changes etc
-function keepOnlyMessageEvents (messages = []) {
-  return messages.filter(
-    message => message.event === 'message' || message.event === 'comment'
-  )
-}
-
-// matches messages with nick names if possible
-function addUserInfoToMessages (users = [], messages = []) {
-  return messages.map(msg => {
-    let haveEqualId = user => user.id === parseInt(msg.user, 10)
-    let userWithEqualId = users.find(haveEqualId)
-    return Object.assign({}, msg, userWithEqualId)
-  })
-}
-
-function setSpinnerText (
+function setSpinnerText ({
   spinner,
   messages,
   flowName,
   messageCount,
   latestDownloadedMessageId
-) {
-  let remainingToDownload = messageCount - latestDownloadedMessageId
-  spinner.text = `Indexed ${messages.length} messages of ${parseInt(
-    remainingToDownload,
+}) {
+  let remainingToDownload = parseInt(
+    messageCount - latestDownloadedMessageId,
     10
-  ).toLocaleString()} in ${flowName}`
+  )
+  spinner.text = `Indexed ${messages.length} of ${flowName} Remaining: ${remainingToDownload.toLocaleString()}`
 }
-function setSpinnerSucceed (spinner, flowName, indexingStat) {
-  debugger
+
+function setSpinnerSucceed ({ spinner, flowName, indexingStat }) {
   let getUpdateStats = indexingStat => {
-    if (indexingStat['flowName']) {
-      return ` | updated: ${indexingStat['flowName']
-        .updated} created: ${indexingStat['flowName'].created}`
+    if (!indexingStat['flowName']) {
+      return ''
     }
+    return ` | updated: ${indexingStat['flowName']
+      .updated} created: ${indexingStat['flowName'].created}`
   }
+
   spinner.succeed(`Indexing done: ${flowName} ${getUpdateStats(indexingStat)}`)
 }
 function getStat (elasticsearchResponse) {
@@ -119,71 +89,104 @@ function getStat (elasticsearchResponse) {
 
   let initialValue = { updated: 0, created: 0 }
 
-  let results = elasticsearchResponse.items.reduce(reducer, initialValue)
-  return results
+  return elasticsearchResponse.items.reduce(reducer, initialValue)
 }
 
 // give it a flowname and it downloads everything
 // and feeds messages into elasticsearch batch by batch
 // calls itself again as long as there are messages to download
-async function downloadFlowDockMessages (
+async function downloadFlowDockMessages ({
   flowName,
   latestDownloadedMessageId = 0,
   messages = [],
   users,
-  messageCount
-) {
+  messageCount,
+  isLastFlow
+}) {
   // download the first batch
   downloadMoreMessages(latestDownloadedMessageId, flowName)
     .then(async ({ data }) => {
       spinner.start()
-
       // no more messages to download
       if (data.length < 1) {
-        setSpinnerSucceed(spinner, flowName, indexingStat)
+        setSpinnerSucceed({ spinner, flowName, indexingStat })
+        if (isLastFlow) {
+          logger.info(
+            'Indexed updated for all the flows o/',
+            indexingStat.total
+          )
+        }
         return messages
       }
 
       latestDownloadedMessageId =
         data[data.length - 1] && data[data.length - 1].id
-      let messagesWithContent = keepOnlyMessageEvents(data)
-      let messagesWithUserInfo = addUserInfoToMessages(
-        users,
-        messagesWithContent
-      )
 
-      let decoratedMessages = decorateMessageProps(
-        messagesWithUserInfo,
-        flowName
-      )
+      let decoratedMessages = data
+        .filter(
+          message => message.event === 'message' || message.event === 'comment'
+        )
+        .map(msg => {
+          let haveEqualId = user => user.id === parseInt(msg.user, 10)
+          let userWithEqualId = users.find(haveEqualId)
+          return Object.assign({}, msg, userWithEqualId)
+        })
+        .map(message => [
+          {
+            index: {
+              _index: INDEX_NAME,
+              _id: message.uuid,
+              _type: `${flowName}-message`
+            }
+          },
+          {
+            flowId: message.id,
+            content: getMessageContent(message),
+            sentTimeReadable: message.sentTimeReadable,
+            sentTimeReadable: moment(message.sent).format('HH:mm DD-MM-YYYY'),
+            sentEpoch: message.sent,
+            user: message.user,
+            userNick: message.nick,
+            name: message.name,
+            flowName: flowName,
+            organization: flowName.split('/')[0],
+            threadURL: getThreadURL(message, flowName)
+          }
+        ])
 
       // feed the current batch of messages to Elasticsearch
       await saveToElasticsearch(decoratedMessages)
         .then(response => getStat(response))
         .then(result => {
-          indexingStat['flowName'] = result
+          indexingStat[flowName] = result
+          indexingStat.total.updated =
+            indexingStat.total.updated + result.updated
+          indexingStat.total.created =
+            indexingStat.total.created + result.created
         })
         .catch(error => {
           logger.error('savetoElasticsearch panic! ', error)
         })
+
       messages = messages.concat(decoratedMessages)
 
-      setSpinnerText(
+      setSpinnerText({
         spinner,
         messages,
         flowName,
         messageCount,
         latestDownloadedMessageId
-      )
+      })
 
       // download the next batch, starting from the latest downloaded message id
-      return downloadFlowDockMessages(
+      return downloadFlowDockMessages({
         flowName,
         latestDownloadedMessageId,
         messages,
         users,
-        messageCount
-      )
+        messageCount,
+        isLastFlow
+      })
     })
     .catch(error => logger.error(error))
 }
