@@ -57,16 +57,16 @@ function setSpinnerText ({
     messageCount - latestDownloadedMessageId,
     10
   )
-  spinner.text = `Indexed ${messages.length} of ${flowName} Remaining: ${remainingToDownload.toLocaleString()}`
+  spinner.text = `Indexed ${messages.length} of ${flowName} Remaining: ${remainingToDownload.toLocaleString()} (just a guess)`
 }
 
 function setSpinnerSucceed ({ spinner, flowName, indexingStat }) {
   let getUpdateStats = indexingStat => {
-    if (!indexingStat['flowName']) {
+    if (!indexingStat[flowName]) {
       return ''
     }
-    return ` | updated: ${indexingStat['flowName']
-      .updated} created: ${indexingStat['flowName'].created}`
+    return `| updated: ${indexingStat[flowName]
+      .updated} created: ${indexingStat[flowName].created}`
   }
 
   spinner.succeed(`Indexing done: ${flowName} ${getUpdateStats(indexingStat)}`)
@@ -112,7 +112,7 @@ async function downloadFlowDockMessages ({
         setSpinnerSucceed({ spinner, flowName, indexingStat })
         if (isLastFlow) {
           logger.info(
-            'Indexed updated for all the flows o/',
+            'Index updated for all the flows \\o/',
             indexingStat.total
           )
         }
@@ -203,6 +203,5 @@ function getMessagesCount (flowName) {
 
 module.exports = {
   getMessagesCount,
-  downloadFlowDockMessages,
-  indexingStat
+  downloadFlowDockMessages
 }
