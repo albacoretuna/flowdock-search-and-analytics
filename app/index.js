@@ -63,7 +63,7 @@ async function init () {
 
 // to repeat indexing
 const job = new CronJob({
-  cronTime: '* * * * *',
+  cronTime: process.env.CRON_TIME,
   onTick: function () {
     init()
   },
