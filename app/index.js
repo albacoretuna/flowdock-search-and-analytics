@@ -27,15 +27,16 @@ async function init () {
   await createElasticsearchIndex()
   welcomeMessage()
   let users = await getUsers()
-  let downloadOneFlow = async flowName => {
+  let downloadOneFlow = async (flowName, index, array) => {
     try {
-      await downloadFlowDockMessages(
+      await downloadFlowDockMessages({
         flowName,
-        await getLatestMessageIdInFlow(flowName),
-        [],
+        latestDownloadedMessageId: await getLatestMessageIdInFlow(flowName),
+        messages: [],
         users,
-        await getMessagesCount(flowName)
-      )
+        messageCount: await getMessagesCount(flowName),
+        isLastFlow: index === array.length - 1
+      })
     } catch (error) {
       logger.error(error)
     }
