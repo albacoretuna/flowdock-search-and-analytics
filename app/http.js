@@ -1,3 +1,4 @@
+require('dotenv').config()
 const axios = require('axios')
 const btoa = require('btoa')
 const FLOWDOCK_TOKEN = process.env.FLOWDOCK_PERSONAL_API_TOKEN || ''

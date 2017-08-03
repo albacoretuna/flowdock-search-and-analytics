@@ -57,16 +57,16 @@ function setSpinnerText ({
     messageCount - latestDownloadedMessageId,
     10
   )
-  spinner.text = `Indexed ${messages.length} of ${flowName} Remaining: ${remainingToDownload.toLocaleString()}`
+  spinner.text = `Indexed ${messages.length} of ${flowName} Remaining: ${remainingToDownload.toLocaleString()} (just a guess)`
 }
 
 function setSpinnerSucceed ({ spinner, flowName, indexingStat }) {
   let getUpdateStats = indexingStat => {
-    if (!indexingStat['flowName']) {
+    if (!indexingStat[flowName]) {
       return ''
     }
-    return ` | updated: ${indexingStat['flowName']
-      .updated} created: ${indexingStat['flowName'].created}`
+    return `| updated: ${indexingStat[flowName]
+      .updated} created: ${indexingStat[flowName].created}`
   }
 
   spinner.succeed(`Indexing done: ${flowName} ${getUpdateStats(indexingStat)}`)
@@ -112,7 +112,7 @@ async function downloadFlowDockMessages ({
         setSpinnerSucceed({ spinner, flowName, indexingStat })
         if (isLastFlow) {
           logger.info(
-            'Indexed updated for all the flows o/',
+            'Index updated for all the flows \\o/',
             indexingStat.total
           )
         }
@@ -131,28 +131,33 @@ async function downloadFlowDockMessages ({
           let userWithEqualId = users.find(haveEqualId)
           return Object.assign({}, msg, userWithEqualId)
         })
-        .map(message => [
-          {
-            index: {
-              _index: INDEX_NAME,
-              _id: message.uuid,
-              _type: `${flowName}-message`
+        .map(message => {
+          let messageContent = getMessageContent(message)
+          let messageWordCount = (messageContent || '').split(' ').length
+          return [
+            {
+              index: {
+                _index: INDEX_NAME,
+                _id: message.uuid,
+                _type: `${flowName}-message`
+              }
+            },
+            {
+              flowId: message.id,
+              content: messageContent,
+              sentTimeReadable: message.sentTimeReadable,
+              sentTimeReadable: moment(message.sent).format('HH:mm DD-MM-YYYY'),
+              sentEpoch: message.sent,
+              user: message.user,
+              userNick: message.nick,
+              name: message.name,
+              flowName: flowName,
+              organization: flowName.split('/')[0],
+              threadURL: getThreadURL(message, flowName),
+              messageWordCount
             }
-          },
-          {
-            flowId: message.id,
-            content: getMessageContent(message),
-            sentTimeReadable: message.sentTimeReadable,
-            sentTimeReadable: moment(message.sent).format('HH:mm DD-MM-YYYY'),
-            sentEpoch: message.sent,
-            user: message.user,
-            userNick: message.nick,
-            name: message.name,
-            flowName: flowName,
-            organization: flowName.split('/')[0],
-            threadURL: getThreadURL(message, flowName)
-          }
-        ])
+          ]
+        })
 
       // feed the current batch of messages to Elasticsearch
       await saveToElasticsearch(decoratedMessages)
@@ -203,6 +208,5 @@ function getMessagesCount (flowName) {
 
 module.exports = {
   getMessagesCount,
-  downloadFlowDockMessages,
-  indexingStat
+  downloadFlowDockMessages
 }

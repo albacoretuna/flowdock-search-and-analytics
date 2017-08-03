@@ -20,7 +20,6 @@ async function createElasticsearchIndex () {
   if (indexExists) {
     return
   }
-
   try {
     let createIndex = await client.indices.create({
       index: INDEX_NAME,
@@ -106,6 +105,9 @@ async function createElasticsearchIndex () {
               },
               threadURL: {
                 type: 'text'
+              },
+              messageWordCount: {
+                type: 'long'
               }
             }
           }
@@ -114,6 +116,7 @@ async function createElasticsearchIndex () {
     })
   } catch (indexError) {
     logger.error('Elastic search index creation panic!', indexError)
+    process.exit(1)
   }
 }
 
