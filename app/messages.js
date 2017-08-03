@@ -92,6 +92,43 @@ function getStat (elasticsearchResponse) {
   return elasticsearchResponse.items.reduce(reducer, initialValue)
 }
 
+const formatMessages = (messages, users, flowName) =>
+  messages
+    .filter(
+      message => message.event === 'message' || message.event === 'comment'
+    )
+    .map(msg => {
+      let haveEqualId = user => user.id === parseInt(msg.user, 10)
+      let userWithEqualId = users.find(haveEqualId)
+      return Object.assign({}, msg, userWithEqualId)
+    })
+    .map(message => {
+      let messageContent = getMessageContent(message)
+      let messageWordCount = (messageContent || '').split(' ').length
+      return [
+        {
+          index: {
+            _index: INDEX_NAME,
+            _id: message.uuid,
+            _type: `${flowName}-message`
+          }
+        },
+        {
+          flowId: message.id,
+          content: messageContent,
+          sentTimeReadable: message.sentTimeReadable,
+          sentTimeReadable: moment(message.sent).format('HH:mm DD-MM-YYYY'),
+          sentEpoch: message.sent,
+          user: message.user,
+          userNick: message.nick,
+          name: message.name,
+          flowName: flowName,
+          organization: flowName.split('/')[0],
+          threadURL: getThreadURL(message, flowName),
+          messageWordCount
+        }
+      ]
+    })
 // give it a flowname and it downloads everything
 // and feeds messages into elasticsearch batch by batch
 // calls itself again as long as there are messages to download
@@ -122,42 +159,7 @@ async function downloadFlowDockMessages ({
       latestDownloadedMessageId =
         data[data.length - 1] && data[data.length - 1].id
 
-      let decoratedMessages = data
-        .filter(
-          message => message.event === 'message' || message.event === 'comment'
-        )
-        .map(msg => {
-          let haveEqualId = user => user.id === parseInt(msg.user, 10)
-          let userWithEqualId = users.find(haveEqualId)
-          return Object.assign({}, msg, userWithEqualId)
-        })
-        .map(message => {
-          let messageContent = getMessageContent(message)
-          let messageWordCount = (messageContent || '').split(' ').length
-          return [
-            {
-              index: {
-                _index: INDEX_NAME,
-                _id: message.uuid,
-                _type: `${flowName}-message`
-              }
-            },
-            {
-              flowId: message.id,
-              content: messageContent,
-              sentTimeReadable: message.sentTimeReadable,
-              sentTimeReadable: moment(message.sent).format('HH:mm DD-MM-YYYY'),
-              sentEpoch: message.sent,
-              user: message.user,
-              userNick: message.nick,
-              name: message.name,
-              flowName: flowName,
-              organization: flowName.split('/')[0],
-              threadURL: getThreadURL(message, flowName),
-              messageWordCount
-            }
-          ]
-        })
+      let decoratedMessages = formatMessages(data, users, flowName)
 
       // feed the current batch of messages to Elasticsearch
       await saveToElasticsearch(decoratedMessages)
