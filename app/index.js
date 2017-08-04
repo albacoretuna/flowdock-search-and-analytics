@@ -69,7 +69,3 @@ const job = new CronJob({
   },
   start: true
 })
-
-module.exports = {
-  init
-}
