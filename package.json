@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node app/index.js",
+    "server": "nodemon app/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "elk": "cd docker-elk && docker-compose up",
     "list-flows": "node app/listFlows.js",
@@ -24,12 +25,17 @@
   },
   "dependencies": {
     "axios": "0.16.2",
+    "bluebird": "^3.5.0",
     "btoa": "1.1.2",
     "dotenv": "4.0.0",
     "elasticsearch": "^13.2.0",
+    "express": "^4.15.3",
     "husky": "0.14.3",
+    "leveldown": "^1.7.2",
+    "levelup": "^1.3.9",
     "lint-staged": "4.0.2",
     "moment": "2.18.1",
+    "nodemon": "^1.11.0",
     "ora": "1.3.0",
     "prettier-standard": "6.0.0",
     "winston": "2.3.1"
