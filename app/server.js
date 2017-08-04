@@ -7,7 +7,9 @@ app.get('/', function (req, res) {
     .then(data => {
       res.send('Last updated' + data)
     })
-    .catch(error => console.error)
+    .catch(error => {
+      res.send('No data')
+    })
 })
 
 app.listen(3000, function () {
