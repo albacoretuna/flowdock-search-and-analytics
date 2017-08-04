@@ -1,6 +1,6 @@
 # Flowdock Analytics
 
-An app to import Flowdock messages into elastic search stack, so that search and analytics becomes easier for Flowdock.
+A nodejs app to mport Flowdock messages into elasticsearch, so that search and analytics becomes easier for Flowdock. Once messages are indexed Kibana can be used to search and visualize results in realtime. 
 
 # Install
 ### 1. clone and add dependencies  
