@@ -6,6 +6,7 @@
   "loadEagerly": [
   ],
   "plugins": {
-    "node": {}
+    "node": {},
+    "node-express": {}
   }
 }

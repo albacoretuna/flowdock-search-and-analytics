@@ -4,13 +4,17 @@
   "description": "Import Flowdock messages into elastic search for search and analytics purposes.",
   "main": "index.js",
   "scripts": {
+    "indexing": "node app/index.js",
     "start": "node app/index.js",
-    "server": "nodemon app/server.js",
+    "production": "node app/index.js & npm run buildNext && npm run startNext",
     "test": "echo \"Error: no test specified\" && exit 1",
     "elk": "cd docker-elk && docker-compose up",
     "list-flows": "node app/listFlows.js",
     "precommit": "lint-staged",
-    "format": "prettier-standard 'app/**/*.js'"
+    "format": "prettier-standard 'app/**/*.js'",
+    "devNext": "node app/server.js",
+    "buildNext": "next build",
+    "startNext": "NODE_ENV=production node app/server.js"
   },
   "author": "Omid",
   "license": "MIT",
@@ -36,9 +40,13 @@
     "levelup": "^1.3.9",
     "lint-staged": "4.0.2",
     "moment": "2.18.1",
+    "next": "3.0.1-beta.20",
     "nodemon": "^1.11.0",
     "ora": "1.3.0",
     "prettier-standard": "6.0.0",
+    "react": "15.6.1",
+    "react-dom": "15.6.1",
+    "tern-node-express": "0.4.0",
     "timer-stopwatch": "0.2.0",
     "undefsafe": "2.0.1",
     "winston": "2.3.1"
