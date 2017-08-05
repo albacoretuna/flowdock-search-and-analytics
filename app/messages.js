@@ -1,10 +1,15 @@
 /*
  * CREDITS:
- * This app really helped with understanding flowdock api: https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
+ * Ideas on how flowdock api works: https://raw.githubusercontent.com/Neamar/flowdock-stats/gh-pages/js/messages.js
+ *
  **/
+
 'use strict'
+// libraries
 const ora = require('ora')
 const moment = require('moment')
+
+// ours
 const { makeRequest } = require('./http.js')
 const { saveToElasticsearch } = require('./elasticsearch.js')
 const spinner = new ora()
@@ -73,6 +78,7 @@ function setSpinnerSucceed ({ spinner, flowName, indexingStat }) {
 
   indexingStat.total.flowsDone += 1
 }
+
 function getStat (elasticsearchResponse) {
   let reducer = (result, item) => {
     switch (item['index']['result']) {

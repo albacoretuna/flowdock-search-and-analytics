@@ -62,10 +62,18 @@ async function init () {
 }
 
 // to repeat indexing
-const job = new CronJob({
+const indexingJob = new CronJob({
   cronTime: process.env.CRON_TIME,
   onTick: function () {
+    logger.info(
+      'This job will run based on this crontab schedule:',
+      process.env.CRON_TIME
+    )
+
+    // let it begin!
     init()
   },
-  start: true
+  runOnInit: true
 })
+
+indexingJob.start()

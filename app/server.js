@@ -5,7 +5,7 @@ const { read } = require('./store.js')
 app.get('/', function (req, res) {
   read('status')
     .then(data => {
-      res.send('Last updated' + data)
+      res.send('Index last updated' + data)
     })
     .catch(error => {
       res.send('No data')
