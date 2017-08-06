@@ -7,7 +7,7 @@
     "indexing": "node app/index.js",
     "start": "node app/index.js",
     "production": "node app/index.js & npm run buildNext && npm run startNext",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "eslint app/**/*.js",
     "elk": "cd docker-elk && docker-compose up",
     "list-flows": "node app/listFlows.js",
     "precommit": "lint-staged",
@@ -15,6 +15,9 @@
     "devNext": "node app/server.js",
     "buildNext": "next build",
     "startNext": "NODE_ENV=production node app/server.js"
+  },
+  "engines": {
+    "node": ">=8.0.0"
   },
   "author": "Omid",
   "license": "MIT",
@@ -50,5 +53,14 @@
     "timer-stopwatch": "0.2.0",
     "undefsafe": "2.0.1",
     "winston": "2.3.1"
+  },
+  "devDependencies": {
+    "eslint": "4.4.0",
+    "eslint-config-standard": "10.2.1",
+    "eslint-plugin-import": "2.7.0",
+    "eslint-plugin-node": "5.1.1",
+    "eslint-plugin-promise": "3.5.0",
+    "eslint-plugin-react": "7.1.0",
+    "eslint-plugin-standard": "3.0.1"
   }
 }

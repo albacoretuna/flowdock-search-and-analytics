@@ -1,24 +1,27 @@
-const { makeRequest } = require('./http.js')
+"use strict";
+const { logger } = require("./logger.js");
+const { makeRequest } = require("./http.js");
 
 // returns an array of messages
-function getFlowNames () {
+function getFlowNames() {
   return makeRequest({
-    method: 'get'
+    method: "get"
   })
     .then(({ data: flows }) => {
-      console.log(
+      logger.log(
         flows
           .map(
             flow =>
               `${flow.organization
                 .parameterized_name}/${flow.parameterized_name}`
           )
-          .join(', ')
-      )
+          .join(", ")
+      );
     })
     .catch(error => {
-      console.error(error)
-    })
+      logger.error(error);
+      throw error;
+    });
 }
 
-getFlowNames()
+getFlowNames();

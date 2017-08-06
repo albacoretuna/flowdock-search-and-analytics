@@ -1,27 +1,29 @@
-const elasticsearch = require('elasticsearch')
-const { logger } = require('./logger.js')
+"use strict";
+const elasticsearch = require("elasticsearch");
+const { logger } = require("./logger.js");
 
 const client = new elasticsearch.Client({
   host: process.env.ELASTICSEARCH_HOST,
-  log: process.env.LOGLEVEL === 'debug' ? 'trace' : ''
-})
-const INDEX_NAME = process.env.INDEX_NAME || 'flowdock-messages'
-async function createElasticsearchIndex () {
-  let indexExists = false
+  log: process.env.LOGLEVEL === "debug" ? "trace" : ""
+});
+const INDEX_NAME = process.env.INDEX_NAME || "flowdock-messages";
+async function createElasticsearchIndex() {
+  let indexExists = false;
   try {
-    indexExists = await client.indices.exists({ index: INDEX_NAME })
+    indexExists = await client.indices.exists({ index: INDEX_NAME });
   } catch (error) {
-    logger.error('Elasticsearch panic!')
-    logger.error('Elasticsearch says: ', error)
-    logger.debug('Elastic host: ', process.env.ELASTICSEARCH_HOST)
-    process.exit(1)
+    logger.error("Elasticsearch panic!");
+    logger.error("Elasticsearch says: ", error);
+    logger.debug("Elastic host: ", process.env.ELASTICSEARCH_HOST);
+    process.exitCode = 1;
+    throw new Error("Indexing won't continue!");
   }
 
   if (indexExists) {
-    return
+    return;
   }
   try {
-    let createIndex = await client.indices.create({
+    await client.indices.create({
       index: INDEX_NAME,
       body: {
         settings: {
@@ -30,104 +32,105 @@ async function createElasticsearchIndex () {
           }
         },
         mappings: {
-          '*-messages': {
+          "*-messages": {
             properties: {
               content: {
-                type: 'text',
+                type: "text",
                 fields: {
                   keyword: {
-                    type: 'keyword',
+                    type: "keyword",
                     ignore_above: 256
                   }
                 }
               },
               sentEpoch: {
-                type: 'date',
-                format: 'strict_date_optional_time||epoch_millis',
+                type: "date",
+                format: "strict_date_optional_time||epoch_millis",
                 ignore_malformed: true
               },
               setnTimeReadable: {
-                type: 'text',
+                type: "text",
                 fields: {
                   keyword: {
-                    type: 'keyword',
+                    type: "keyword",
                     ignore_above: 256
                   }
                 }
               },
               user: {
-                type: 'text',
+                type: "text",
                 fields: {
                   keyword: {
-                    type: 'keyword',
+                    type: "keyword",
                     ignore_above: 256
                   }
                 }
               },
               nick: {
-                type: 'text',
+                type: "text",
                 fields: {
                   keyword: {
-                    type: 'keyword',
+                    type: "keyword",
                     ignore_above: 256
                   }
                 }
               },
               name: {
-                type: 'text',
+                type: "text",
                 fields: {
                   keyword: {
-                    type: 'keyword',
+                    type: "keyword",
                     ignore_above: 256
                   }
                 }
               },
               flowName: {
-                type: 'text',
+                type: "text",
                 fields: {
                   keyword: {
-                    type: 'keyword',
+                    type: "keyword",
                     ignore_above: 256
                   }
                 }
               },
               organization: {
-                type: 'text',
+                type: "text",
                 fields: {
                   keyword: {
-                    type: 'keyword',
+                    type: "keyword",
                     ignore_above: 256
                   }
                 }
               },
               flowId: {
-                type: 'integer'
+                type: "integer"
               },
               threadURL: {
-                type: 'text'
+                type: "text"
               },
               messageWordCount: {
-                type: 'long'
+                type: "long"
               }
             }
           }
         }
       }
-    })
+    });
   } catch (indexError) {
-    logger.error('Elastic search index creation panic!', indexError)
-    process.exit(1)
+    logger.error("Elastic search index creation panic!", indexError);
+    process.exitCode = 1;
+    throw indexError;
   }
 }
 
-function getLatestMessageIdInFlow (flowName) {
+function getLatestMessageIdInFlow(flowName) {
   return client
     .search({
       index: INDEX_NAME,
       body: {
         size: 0,
         aggs: {
-          max_flowId: { max: { field: 'flowId' } }
+          max_flowId: { max: { field: "flowId" } }
         },
         query: {
           type: {
@@ -136,26 +139,26 @@ function getLatestMessageIdInFlow (flowName) {
         }
       }
     })
-    .then(data => data.aggregations['max_flowId'].value)
-    .catch(error => logger.error('getLatestMessageId Panic! :', error))
+    .then(data => data.aggregations["max_flowId"].value)
+    .catch(error => logger.error("getLatestMessageId Panic! :", error));
 }
 
-function saveToElasticsearch (messages) {
+function saveToElasticsearch(messages) {
   let flatDecoratedMessages = messages
     .filter(el => el.length === 2 && el[1].length !== 0)
-    .reduce((a, b) => a.concat(b), [])
+    .reduce((a, b) => a.concat(b), []);
 
   if (flatDecoratedMessages.length < 1) {
-    return Promise.resolve({ items: [] })
+    return Promise.resolve({ items: [] });
   }
 
   return client.bulk({
     body: flatDecoratedMessages
-  })
+  });
 }
 
 module.exports = {
   saveToElasticsearch,
   createElasticsearchIndex,
   getLatestMessageIdInFlow
-}
+};
