@@ -178,6 +178,7 @@ Index updated for ${flowsNumber} flows \\o/ updated: ${indexingStat.total
 `
           );
           stopWatch.stop();
+          indexingStat.total.flowsDone = 0;
           setInProgress(false);
         }
         return messages;
