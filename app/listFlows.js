@@ -8,7 +8,8 @@ function getFlowNames() {
     method: "get"
   })
     .then(({ data: flows }) => {
-      logger.log(
+      /* eslint-disable no-console */
+      console.log(
         flows
           .map(
             flow =>
