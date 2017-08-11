@@ -18,4 +18,4 @@ ELASTICSEARCH_HOST=localhost:9200
 FLOWS_TO_DOWNLOAD=flowdock-organization-name/flow-name,another-organization/another-flow-name
 
 # 5. set the execution intervals, as a cronjob. https://crontab.guru/ helps with choosing the right one :)
-CRON_TIME=* * * * *
+CRON_TIME=*/30 * * * *
