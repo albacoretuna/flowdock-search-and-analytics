@@ -44,7 +44,8 @@ docker-compose up
 This way you don't need to worry about setting up node and npm. It will be setup along with elasticsearch and kibana. And it starts indexing messages. However running node is preferred as it shows more beautiful spinners :)
 
 # Frequently asked questions
-
+<details>
+ <summary>open</summary>
 1. How long indexing might take?
 
 The first time for 71 flows, and 9 million messages took me about half an hour. And next runs were around one minute, as only new messages need to be downloaded.
@@ -52,11 +53,12 @@ The first time for 71 flows, and 9 million messages took me about half an hour. 
 2. How to get list of the flow names?
 
 There's an npm script for it. Run npm run list-flows.
-
+</details>
 # Developer notes
 <details>
-<summary>What are we trying to achieve here?
-Import all the flows into Elasticsearch.</summary>
+ <summary>open</summary>
+What are we trying to achieve here?
+Import all the flows into Elasticsearch.
 
 ## Why?
   * Flowdock doesn't provide a global search.
