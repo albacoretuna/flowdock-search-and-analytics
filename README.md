@@ -31,6 +31,7 @@ npm start
 ```
 This process might take some time depending on the number of messages that need to be indexed.
 
+
 # Alternative setup
 (full docker, no node/npm needed)
 
@@ -42,6 +43,12 @@ docker-compose up
 ```
 
 This way you don't need to worry about setting up node and npm. It will be setup along with elasticsearch and kibana. And it starts indexing messages. However running node is preferred as it shows more beautiful spinners :)
+
+# Usage
+After the setup is done and indexing is started, you can immediately use Kibana to search and analyze the data. Point your browser to localhost:5601 and you'll be good to go!
+
+You will need to insert "flowdock" as a index pattern name in the kibana's setup page.
+
 
 # Frequently asked questions
 <details>
