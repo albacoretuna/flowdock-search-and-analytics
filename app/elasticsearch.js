@@ -6,6 +6,16 @@ const client = new elasticsearch.Client({
   host: process.env.ELASTICSEARCH_HOST,
   log: process.env.LOGLEVEL === "debug" ? "trace" : ""
 });
+
+function elasticsearchIsFound() {
+  return client
+    .ping({
+      requestTimeout: 1000
+    })
+    .then(() => true)
+    .catch(() => false);
+}
+
 const INDEX_NAME = process.env.INDEX_NAME || "flowdock-messages";
 async function createElasticsearchIndex() {
   let indexExists = false;
@@ -158,6 +168,7 @@ function saveToElasticsearch(messages) {
 }
 
 module.exports = {
+  elasticsearchIsFound,
   saveToElasticsearch,
   createElasticsearchIndex,
   getLatestMessageIdInFlow

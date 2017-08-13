@@ -1,9 +1,9 @@
 # Flowdock Analytics
 
-A nodejs app to mport Flowdock messages into elasticsearch, so that search and analytics becomes easier for Flowdock. Once messages are indexed Kibana can be used to search and visualize results in realtime. 
+A nodejs app to mport Flowdock messages into elasticsearch, so that search and analytics becomes easier for Flowdock. Once messages are indexed Kibana can be used to search and visualize results in realtime.
 
 # Install
-### 1. clone and add dependencies  
+### 1. clone and add dependencies
 ```bash
 git clone git@github.com:omidfi/flowdock-analytics.git
 cd flowdock-analytics
@@ -14,7 +14,7 @@ Copy env-sample to .env and add your flowdock api token, and other details.
 Your api token can be found at [flowdock's user account page ](https://www.flowdock.com/account/tokens).
 
 ### 3. Get yourself elasticsearch and Kibana
-You can use your exisiting elasticsearch and Kibana services, use a hosted version, or start one by the docker images proved: 
+You can use your exisiting elasticsearch and Kibana services, use a hosted version, or start one by the docker images proved:
 
 ```bash
 # start elasticsearch
@@ -31,13 +31,32 @@ npm start
 ```
 This process might take some time depending on the number of messages that need to be indexed.
 
+# Alternative setup (full docker, no node/npm needed)
+If you like to run everything including the node app using docker-compose.
+Only take the step 2 from the above, and then in the root folder of the project run
+
+```bash
+docker-compose up
+```
+
+This way you don't need to worry about setting up node and npm. It will be setup along with elasticsearch and kibana. And it starts indexing messages. However running node is preferred as it shows more beautiful spinners :)
+
+# Frequently asked questions
+
+1. How long indexing might take?
+The first time for 71 flows, and 9 million messages took me about half an hour. And next runs were around one minute, as only new messages need to be downloaded.
+
+2. How to get list of the flow names?
+There's an npm script for it. Run npm run list-flows.
+
+
 # Developer notes
 What are we trying to achieve here?
 Import all the flows into Elasticsearch.
 
 ## Why?
-  * Flowdock doesn't provide a global search. 
-  * Flowdock doesn't provide any search in the mobile version. 
+  * Flowdock doesn't provide a global search.
+  * Flowdock doesn't provide any search in the mobile version.
 
 ## How?
   * Make a list of interesting flows

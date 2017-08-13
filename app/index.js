@@ -1,46 +1,54 @@
-'use strict'
+"use strict";
 // libraries
-require('dotenv').config()
-const CronJob = require('cron').CronJob
-const timer = require('timer-stopwatch')
+require("dotenv").config();
+const CronJob = require("cron").CronJob;
+const timer = require("timer-stopwatch");
 
 // ours
-const { logger } = require('./logger.js')
-const { getMessagesCount, downloadFlowDockMessages } = require('./messages.js')
-const { getUsers } = require('./users.js')
+const { logger } = require("./logger.js");
+const { getMessagesCount, downloadFlowDockMessages } = require("./messages.js");
+const { getUsers } = require("./users.js");
 const {
+  elasticsearchIsFound,
   createElasticsearchIndex,
   getLatestMessageIdInFlow
-} = require('./elasticsearch.js')
-let inProgress = false
+} = require("./elasticsearch.js");
+let inProgress = false;
 
-function setInProgress (value) {
-  inProgress = value
+function setInProgress(value) {
+  inProgress = value;
 }
 // instructions in ./env-sample file
 const flowsToDownload = process.env.FLOWS_TO_DOWNLOAD
-  .replace(/ /gm, '')
-  .split(',')
+  .replace(/ /gm, "")
+  .split(",");
 
-function welcomeMessage () {
+function welcomeMessage() {
   logger.info(
-    'Hello! starting to download and index messages for',
+    "Starting index messages from",
     flowsToDownload.length,
-    'flows.',
-    '\n Total message numbers are just estimates.',
-    '\n Only new messages after the last indexing will be downloaded'
-  )
+    "flows.",
+    "\n Total message numbers are just estimates.",
+    "\n First run might take half an hour, but next runs probably under a minute.",
+    "\n as only new messages after the last indexing will be downloaded"
+  );
 }
 
-async function init () {
-  if (inProgress) return
+async function init() {
+  if (inProgress) return;
+  // retry init if elasticsearch isn't responding
+  if (!await elasticsearchIsFound()) {
+    logger.info("Elastic search not found, trying again in 60 second");
+    setTimeout(init, 60000);
+    return;
+  }
 
-  setInProgress(true)
-  const stopWatch = new timer()
-  stopWatch.start()
-  await createElasticsearchIndex()
-  welcomeMessage()
-  let users = await getUsers()
+  setInProgress(true);
+  const stopWatch = new timer();
+  stopWatch.start();
+  await createElasticsearchIndex();
+  welcomeMessage();
+  let users = await getUsers();
   let downloadOneFlow = async (flowName, index, array) => {
     try {
       await downloadFlowDockMessages({
@@ -52,28 +60,28 @@ async function init () {
         flowsNumber: array.length,
         stopWatch,
         setInProgress
-      })
+      });
     } catch (error) {
-      logger.error(error)
+      logger.error(error);
     }
-  }
+  };
 
-  flowsToDownload.forEach(downloadOneFlow)
+  flowsToDownload.forEach(downloadOneFlow);
 }
 
 // to repeat indexing
 const indexingJob = new CronJob({
   cronTime: process.env.CRON_TIME,
-  onTick: function () {
+  onTick: function() {
     logger.info(
-      'This job will run based on this crontab schedule:',
+      "This job will run based on this crontab schedule:",
       process.env.CRON_TIME
-    )
+    );
 
     // let it begin!
-    init()
+    init();
   },
   runOnInit: true
-})
+});
 
-indexingJob.start()
+indexingJob.start();
