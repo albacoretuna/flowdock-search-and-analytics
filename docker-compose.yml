@@ -1,3 +1,5 @@
+# This compose file starts elasticsearch, kibana and the node app which starts indexing right away. All included!
+
 version: '2'
 
 services:

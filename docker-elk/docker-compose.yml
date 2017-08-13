@@ -1,3 +1,5 @@
+# This compose file starts only elasticsearch and kibana, then you can start the npm task from the root folder with npm start. If you like everything to be run by docker, try the compose file in the root of the project.
+
 version: '2'
 
 services:
