@@ -54,7 +54,9 @@ The first time for 71 flows, and 9 million messages took me about half an hour. 
 
 There's an npm script for it. Run npm run list-flows.
 </details>
+
 # Developer notes
+
 <details>
  <summary>open</summary>
 What are we trying to achieve here?
