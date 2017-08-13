@@ -53,10 +53,10 @@ The first time for 71 flows, and 9 million messages took me about half an hour. 
 
 There's an npm script for it. Run npm run list-flows.
 
-
 # Developer notes
-What are we trying to achieve here?
-Import all the flows into Elasticsearch.
+<details>
+<summary>What are we trying to achieve here?
+Import all the flows into Elasticsearch.</summary>
 
 ## Why?
   * Flowdock doesn't provide a global search.
@@ -69,3 +69,6 @@ Import all the flows into Elasticsearch.
   * Download new messages and store it into elastic search recursively
   * Merge with the messages with user information so that each message gets user's name etc.
   * Index those into Elasticsearch
+
+</details>
+
