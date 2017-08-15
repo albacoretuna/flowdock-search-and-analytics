@@ -3,16 +3,19 @@
 const { makeRequest } = require("./http.js");
 const { logger } = require("./logger.js");
 
-// gets all the users that the token owner is allowed to see
-async function getUsers() {
-  return await makeRequest({
-    baseURL: `https://api.flowdock.com/users`,
-    method: "get"
+// returns an array of users in the flow
+function getFlowUsers(flowName) {
+  return makeRequest({
+    method: "get",
+    url: flowName
   })
-    .then(({ data }) => data)
-    .catch(error => logger.error("getUsers panic!: ", error));
+    .then(({ data }) => data.users)
+    .catch(error => {
+      logger.error(error);
+      throw error;
+    });
 }
 
 module.exports = {
-  getUsers
+  getFlowUsers
 };

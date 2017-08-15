@@ -58,6 +58,16 @@ async function createElasticsearchIndex() {
                 format: "strict_date_optional_time||epoch_millis",
                 ignore_malformed: true
               },
+              user_last_activity: {
+                type: "date",
+                format: "strict_date_optional_time||epoch_millis",
+                ignore_malformed: true
+              },
+              user_last_ping: {
+                type: "date",
+                format: "strict_date_optional_time||epoch_millis",
+                ignore_malformed: true
+              },
               setnTimeReadable: {
                 type: "text",
                 fields: {
@@ -75,6 +85,9 @@ async function createElasticsearchIndex() {
                     ignore_above: 256
                   }
                 }
+              },
+              user_disabled: {
+                type: "boolean"
               },
               nick: {
                 type: "text",

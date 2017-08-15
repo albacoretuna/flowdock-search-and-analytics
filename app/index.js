@@ -7,7 +7,7 @@ const timer = require("timer-stopwatch");
 // ours
 const { logger } = require("./logger.js");
 const { getMessagesCount, downloadFlowDockMessages } = require("./messages.js");
-const { getUsers } = require("./users.js");
+const { getFlowUsers } = require("./users.js");
 const {
   elasticsearchIsFound,
   createElasticsearchIndex,
@@ -48,14 +48,13 @@ async function init() {
   stopWatch.start();
   await createElasticsearchIndex();
   welcomeMessage();
-  let users = await getUsers();
   let downloadOneFlow = async (flowName, index, array) => {
     try {
       await downloadFlowDockMessages({
         flowName,
         latestDownloadedMessageId: await getLatestMessageIdInFlow(flowName),
         messages: [],
-        users,
+        users: await getFlowUsers(flowName),
         messageCount: await getMessagesCount(flowName),
         flowsNumber: array.length,
         stopWatch,

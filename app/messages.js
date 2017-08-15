@@ -139,6 +139,9 @@ const formatMessages = (messages, users, flowName) =>
           sentTimeReadable: moment(message.sent).format("HH:mm DD-MM-YYYY"),
           sentEpoch: message.sent,
           user: message.user,
+          user_last_activity: message.last_activity,
+          user_last_ping: message.last_ping,
+          user_disabled: message.disabled,
           userNick: message.nick,
           name: message.name,
           flowName: flowName,
@@ -185,7 +188,6 @@ Index updated for ${flowsNumber} flows \\o/ updated: ${indexingStat.total
       }
       latestDownloadedMessageId =
         data[data.length - 1] && data[data.length - 1].id;
-
       let decoratedMessages = formatMessages(data, users, flowName);
 
       // feed the current batch of messages to Elasticsearch
