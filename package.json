@@ -43,6 +43,7 @@
     "levelup": "^1.3.9",
     "lint-staged": "4.0.2",
     "moment": "2.18.1",
+    "moment-timezone": "0.5.13",
     "next": "3.0.1-beta.20",
     "nodemon": "^1.11.0",
     "ora": "1.3.0",

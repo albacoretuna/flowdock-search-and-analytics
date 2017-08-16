@@ -1,6 +1,7 @@
-'use strict'
-const winston = require('winston')
-const timeStampFormat = () => new Date().toLocaleString()
+"use strict";
+const moment = require("moment-timezone");
+const winston = require("winston");
+const timeStampFormat = () => moment().tz("Europe/Helsinki").format();
 const logger = new winston.Logger({
   transports: [
     new winston.transports.Console({
@@ -8,9 +9,9 @@ const logger = new winston.Logger({
       colorize: true
     })
   ]
-})
-logger.level = process.env.LOGLEVEL || 'info'
+});
+logger.level = process.env.LOGLEVEL || "info";
 
 module.exports = {
   logger
-}
+};

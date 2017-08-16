@@ -8,6 +8,8 @@ services:
     build: docker-elk/elasticsearch/
     volumes:
       - ./docker-elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -21,6 +23,8 @@ services:
     build: docker-elk/kibana/
     volumes:
       - ./docker-elk/kibana/config/:/usr/share/kibana/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     ports:
       - "5601:5601"
     networks:
@@ -29,10 +33,13 @@ services:
       - elasticsearch
 
   node:
+    build: ./
     env_file: .env
     environment:
       ELASTICSEARCH_HOST: "elasticsearch:9200"
-    build: ./
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       - elasticsearch
     networks:
