@@ -1,21 +1,22 @@
 # copy this file and rename it to .env, then fill it in!
 
-# 1. add a flowdock token
+# REQUIRED: 1. add a flowdock token
 # your flowdock api can be found at
 # https://www.flowdock.com/account/tokens
 FLOWDOCK_PERSONAL_API_TOKEN=c656ccab5x30353a7ec32s4s2b91c146
 
-# 2. add an elasticsearch index name. This is like the database name in elasticsearch land, choose it freely!
-INDEX_NAME=flowdock-messages
 
-# 3. add an elasticsearch host
-# if you're using the docker-elk setup that came with this, the default localhost:9200 should work
-ELASTICSEARCH_HOST=localhost:9200
-
-# 4. add the list of flows you like to index
+# REQUIRED: 2. add the list of flows you like to index
 # You can use this command to list all the flows that are accessible by your token:
 # $ npm run list-flows
-FLOWS_TO_DOWNLOAD=flowdock-organization-name/flow-name,another-organization/another-flow-name
+FLOWS_TO_DOWNLOAD=flowdock-organization-name/flow-name, another-organization/another-flow-name
 
-# 5. set the execution intervals, as a cronjob. https://crontab.guru/ helps with choosing the right one :)
-CRON_TIME=*/30 * * * *
+
+# OPTIONAL: 3. add an elasticsearch index name. This is like the database name in elasticsearch land, choose it freely! No need to change this one either!
+INDEX_NAME=flowdock
+
+# OPTIONAL: 4. add an elasticsearch host
+# the default is good if you're runnning using full docker mode
+# For development you probably need to set it to 127.0.0.1:9200 or
+# wherever your elasticsearch is running on
+ELASTICSEARCH_HOST=elasticsearch:9200

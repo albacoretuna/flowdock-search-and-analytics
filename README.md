@@ -3,15 +3,34 @@
 A nodejs app to import Flowdock messages into elasticsearch, so that search and analytics becomes easier for Flowdock. Once messages are indexed Kibana can be used to search and visualize results in real time.
 
 # Install
+
+Everything needed for this app is included, and will be running with a single command!
+
+### 1. clone and add dependencies
+```bash
+git clone git@github.com:omidfi/flowdock-analytics.git
+```
+### 2. Set environment veriables
+Copy env-sample to .env and add your flowdock api token, and other details.
+Your api token can be found at [flowdock's user account page ](https://www.flowdock.com/account/tokens).
+
+### 3. Start it!
+```bash
+# in the root directoly!
+docker-compose up
+```
+
+# Development
 ### 1. clone and add dependencies
 ```bash
 git clone git@github.com:omidfi/flowdock-analytics.git
 cd flowdock-analytics
 npm install
 ```
-### 2. Set environment veriables
+### 2. Set environment variables
 Copy env-sample to .env and add your flowdock api token, and other details.
 Your api token can be found at [flowdock's user account page ](https://www.flowdock.com/account/tokens).
+Remember you need to set the elasticsearch host in the .env file.
 
 ### 3. Get yourself elasticsearch and Kibana
 You can use your exisiting elasticsearch and Kibana services, use a hosted version, or start one by the docker images proved:
@@ -29,20 +48,11 @@ If it doesn't work, check out [Docker ELK Project on Github](https://github.com/
 # start the app
 npm start
 ```
-This process might take some time depending on the number of messages that need to be indexed.
+This process might take some time, say half an hour, depending on the number of messages that need to be indexed.
+
+There's a crontab file in the setup, which updates the index every half an hour. See ./crontab
 
 
-# Alternative setup
-(full docker, no node/npm needed)
-
-If you like to run everything including the node app using docker-compose.
-Only take the step 2 from the above, and then in the root folder of the project run
-
-```bash
-docker-compose up
-```
-
-This way you don't need to worry about setting up node and npm. It will be setup along with elasticsearch and kibana. And it starts indexing messages. However running node is preferred as it shows more beautiful spinners :)
 
 # Usage
 After the setup is done and indexing is started, you can immediately use Kibana to search and analyze the data. Point your browser to localhost:5601 and you'll be good to go!
@@ -60,7 +70,17 @@ The first time for 71 flows, and 9 million messages took me about half an hour. 
 2. How to get list of the flow names?
 
 There's an npm script for it. Run npm run list-flows.
+
+3. How to setup Kibana? What's an index pattern?
+
+Index pattern is simply the index name you have used for indexing data into elastic search. The default here is "flowdock".
+
+3. How to setup Kibana? What's the time stamp field?
+
+Choose "sentEpoch" as your time stamp field.
+
 </details>
+
 
 # Developer notes
 
