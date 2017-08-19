@@ -69,11 +69,11 @@ You will need to insert "flowdock" as a index pattern name in the kibana's setup
 
 1. How long indexing might take?
 
-The first time for 71 flows, and 9 million messages took me about half an hour. And next runs were around one minute, as only new messages need to be downloaded.
+The first time for 71 flows, and 600,000 messages, it took about half an hour on my laptop. And next runs were around one minute, as only new messages need to be downloaded.
 
 2. How to get list of the flow names?
 
-There's an npm script for it. Run npm run list-flows.
+There's an npm script for it. Run npm run list-flows. 
 
 3. How to setup Kibana? What's an index pattern?
 
