@@ -4,35 +4,38 @@ A nodejs app to import Flowdock messages into elasticsearch, so that search and 
 
 # Install
 
-Everything needed for this app is included, and will be running with a single command!
+Everything needed for this app is included, and will be running with a single command! 
 
-### 1. clone and add dependencies
+If docker-compose works in your command line, you're good to go.
+
+#### 1. clone the repo
 ```bash
 git clone git@github.com:omidfi/flowdock-analytics.git
 ```
-### 2. Set environment veriables
+#### 2. Set environment veriables
 Copy env-sample to .env and add your flowdock api token, and other details.
 Your api token can be found at [flowdock's user account page ](https://www.flowdock.com/account/tokens).
 
-### 3. Start it!
+#### 3. Start it!
 ```bash
 # in the root directoly!
 docker-compose up
 ```
 
 # Development
-### 1. clone and add dependencies
+For development you need node, npm, and an elasticsearch instance, which is included via docker. 
+#### 1. clone and add dependencies
 ```bash
 git clone git@github.com:omidfi/flowdock-analytics.git
 cd flowdock-analytics
 npm install
 ```
-### 2. Set environment variables
+#### 2. Set environment variables
 Copy env-sample to .env and add your flowdock api token, and other details.
 Your api token can be found at [flowdock's user account page ](https://www.flowdock.com/account/tokens).
 Remember you need to set the elasticsearch host in the .env file.
 
-### 3. Get yourself elasticsearch and Kibana
+#### 3. Get yourself elasticsearch and Kibana
 You can use your exisiting elasticsearch and Kibana services, use a hosted version, or start one by the docker images proved:
 
 ```bash
@@ -42,7 +45,7 @@ docker-compose up
 ```
 If it doesn't work, check out [Docker ELK Project on Github](https://github.com/deviantony/docker-elk)
 
-### 4. Start indexing!
+#### 4. Start indexing!
 
 ```bash
 # start the app
