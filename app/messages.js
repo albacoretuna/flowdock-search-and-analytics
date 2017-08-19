@@ -161,8 +161,7 @@ async function downloadFlowDockMessages({
   users,
   messageCount,
   flowsNumber,
-  stopWatch,
-  setInProgress
+  stopWatch
 }) {
   // download the first batch
   downloadMoreMessages(latestDownloadedMessageId, flowName)
@@ -182,7 +181,6 @@ Index updated for ${flowsNumber} flows \\o/ updated: ${indexingStat.total
           );
           stopWatch.stop();
           indexingStat.total.flowsDone = 0;
-          setInProgress(false);
         }
         return messages;
       }
@@ -216,8 +214,7 @@ Index updated for ${flowsNumber} flows \\o/ updated: ${indexingStat.total
         users,
         messageCount,
         flowsNumber,
-        stopWatch,
-        setInProgress
+        stopWatch
       });
     })
     .catch(error => logger.error(error));

@@ -1,7 +1,7 @@
 "use strict";
 // libraries
-require("dotenv").config();
-const CronJob = require("cron").CronJob;
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const timer = require("timer-stopwatch");
 
 // ours
@@ -13,11 +13,7 @@ const {
   createElasticsearchIndex,
   getLatestMessageIdInFlow
 } = require("./elasticsearch.js");
-let inProgress = false;
 
-function setInProgress(value) {
-  inProgress = value;
-}
 // instructions in ./env-sample file
 const flowsToDownload = process.env.FLOWS_TO_DOWNLOAD
   .replace(/ /gm, "")
@@ -35,7 +31,6 @@ function welcomeMessage() {
 }
 
 async function init() {
-  if (inProgress) return;
   // retry init if elasticsearch isn't responding
   if (!await elasticsearchIsFound()) {
     logger.info("Elastic search not found, trying again in 60 second");
@@ -43,7 +38,6 @@ async function init() {
     return;
   }
 
-  setInProgress(true);
   const stopWatch = new timer();
   stopWatch.start();
   await createElasticsearchIndex();
@@ -57,8 +51,7 @@ async function init() {
         users: await getFlowUsers(flowName),
         messageCount: await getMessagesCount(flowName),
         flowsNumber: array.length,
-        stopWatch,
-        setInProgress
+        stopWatch
       });
     } catch (error) {
       logger.error(error);
@@ -68,19 +61,5 @@ async function init() {
   flowsToDownload.forEach(downloadOneFlow);
 }
 
-// to repeat indexing
-const indexingJob = new CronJob({
-  cronTime: process.env.CRON_TIME,
-  onTick: function() {
-    logger.info(
-      "This job will run based on this crontab schedule:",
-      process.env.CRON_TIME
-    );
-
-    // let it begin!
-    init();
-  },
-  runOnInit: true
-});
-
-indexingJob.start();
+// let it begin!
+init();

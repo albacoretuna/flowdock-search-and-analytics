@@ -1,5 +1,6 @@
 "use strict";
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const axios = require("axios");
 const btoa = require("btoa");
 const FLOWDOCK_TOKEN = process.env.FLOWDOCK_PERSONAL_API_TOKEN || "";
