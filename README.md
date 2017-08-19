@@ -65,7 +65,8 @@ You will need to insert "flowdock" as a index pattern name in the kibana's setup
 
 # Frequently asked questions
 <details>
- <summary>open</summary>
+<summary>open</summary>
+
 1. How long indexing might take?
 
 The first time for 71 flows, and 9 million messages took me about half an hour. And next runs were around one minute, as only new messages need to be downloaded.
@@ -82,6 +83,12 @@ Index pattern is simply the index name you have used for indexing data into elas
 
 Choose "sentEpoch" as your time stamp field.
 
+4. I got tons of messages and errors in console, what's hapenning? 
+
+Try openning Kibana, and see if the indexing is working, if it's working forget about the erros :D 
+
+5. I get "elasticsearch not found, trying again in 60 seconds" what's that? 
+Wait for 60 seconds, probably it will find it, if not, you need to check your settings in .env file
 </details>
 
 
