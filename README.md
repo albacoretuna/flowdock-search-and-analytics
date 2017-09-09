@@ -4,7 +4,7 @@ A nodejs app to import Flowdock messages into elasticsearch, so that search and 
 
 # Install
 
-Everything needed for this app is included, and will be running with a single command! 
+Everything needed for this app is included, and will be running with a single command!
 
 If docker-compose works in your command line, you're good to go.
 
@@ -23,7 +23,7 @@ docker-compose up
 ```
 
 # Development
-For development you need node, npm, and an elasticsearch instance, which is included via docker. 
+For development you need node, npm, and an elasticsearch instance, which is included via docker.
 #### 1. clone and add dependencies
 ```bash
 git clone git@github.com:omidfi/flowdock-analytics.git
@@ -73,7 +73,7 @@ The first time for 71 flows, and 600,000 messages, it took about half an hour on
 
 2. How to get list of the flow names?
 
-There's an npm script for it. Run npm run list-flows. 
+There's an npm script for it. Run npm run list-flows.
 
 3. How to setup Kibana? What's an index pattern?
 
@@ -83,12 +83,15 @@ Index pattern is simply the index name you have used for indexing data into elas
 
 Choose "sentEpoch" as your time stamp field.
 
-4. I got tons of messages and errors in console, what's hapenning? 
+4. I got tons of messages and errors in console, what's hapenning?
 
-Try openning Kibana, and see if the indexing is working, if it's working forget about the erros :D 
+Try openning Kibana, and see if the indexing is working, if it's working forget about the erros :D
 
-5. I get "elasticsearch not found, trying again in 60 seconds" what's that? 
+5. I get "elasticsearch not found, trying again in 60 seconds" what's that?
 Wait for 60 seconds, probably it will find it, if not, you need to check your settings in .env file
+
+6. Is indexing incremental? If I run it again will it start from scratch?
+It is incremental. Every time you run it again it only downloads the new messages.
 </details>
 
 
