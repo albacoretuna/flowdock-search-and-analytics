@@ -10,7 +10,7 @@ If docker-compose works in your command line, you're good to go.
 
 #### 1. clone the repo
 ```bash
-git clone git@github.com:omidfi/flowdock-analytics.git
+git clone git@github.com:albacoretuna/flowdock-analytics.git
 ```
 #### 2. Set environment veriables
 Copy env-sample to .env and add your flowdock api token, and other details.
